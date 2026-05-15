@@ -8,7 +8,7 @@ export class CustomView extends ItemView {
 	private toggleBtn: HTMLButtonElement
 	private resetBtn: HTMLButtonElement
 	private switchBtn: HTMLButtonElement
-	private TODOCircle: SVGCircleElement
+	private elapsedCircle: SVGCircleElement
 
 	constructor(leaf: WorkspaceLeaf, timer: Timer) {
 		super(leaf)
@@ -23,16 +23,20 @@ export class CustomView extends ItemView {
 			cls: "animation-container",
 		})
 		var svg = animationContainer.createSvg("svg")
-		// TODO: give the circles better names
-		var circle1 = svg.createSvg("circle", {
-			attr: { id: "circle1", cx: 70, cy: 70, r: 70, "stroke-width": 2 },
+
+		// The order is important to make the elapsed circle appear above
+		// the default one
+		var defaultCircle = svg.createSvg("circle", {
+			attr: { id: "default", cx: 70, cy: 70, r: 70, "stroke-width": 2 },
 		})
-		this.TODOCircle = svg.createSvg("circle", {
-			attr: { id: "circle3", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
+
+		this.elapsedCircle = svg.createSvg("circle", {
+			attr: { id: "elapsed", cx: 70, cy: 70, r: 60, "stroke-width": 20 },
 		})
-		this.setTODO()
-		var circle2 = svg.createSvg("circle", {
-			attr: { id: "circle2", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
+		this.setElapsedCircleReach()
+
+		var bgCircle = svg.createSvg("circle", {
+			attr: { id: "bg", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
 		})
 
 		// TODO: work/break text
@@ -55,33 +59,34 @@ export class CustomView extends ItemView {
 
 		this.toggleBtn.addEventListener("click", () => {
 			this.timer.toggle()
-			this.TODO()
+			this.updateToggleBtnIcon()
 		})
-		this.TODO()
+		this.updateToggleBtnIcon()
 
 		this.resetBtn.addEventListener("click", () => {
 			this.timer.reset()
-			this.TODO()
+			this.updateToggleBtnIcon()
 		})
 		setIcon(this.resetBtn, "reset")
 
 		this.switchBtn.addEventListener("click", () => {
 			this.timer.switch()
-			this.TODO()
+			this.updateToggleBtnIcon()
 		})
 		setIcon(this.switchBtn, "switch")
 
 		this.timer.registerUpdateCallback("tick", (HFTime: string) => {
 			timeContainer.innerText = HFTime
-			this.setTODO()
+			// TODO: situation when minutes are changed while timer is running
+			this.setElapsedCircleReach()
 		})
 		this.timer.registerUpdateCallback("toggle", () => {
-			this.TODO()
+			this.updateToggleBtnIcon()
 		})
 	}
 
 	// TODO: it needs to be updated when the timer stops by itself
-	TODO() {
+	updateToggleBtnIcon() {
 		if (this.timer.getIsRunning()) {
 			setIcon(this.toggleBtn, "pause")
 		} else {
@@ -89,10 +94,10 @@ export class CustomView extends ItemView {
 		}
 	}
 
-	setTODO() {
-		this.TODOCircle.style.strokeDashoffset = String(
+	setElapsedCircleReach() {
+		this.elapsedCircle.style.strokeDashoffset = String(
 			(this.timer.getTimeLeft().secs / this.timer.getModeTotalSecs()) *
-			430,
+			440,
 		)
 	}
 

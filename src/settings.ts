@@ -91,7 +91,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							if (!ctx.timer.isRunning) {
+							if (!ctx.timer.getIsRunning()) {
 								ctx.timer.reset()
 							}
 						})
@@ -109,7 +109,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							if (!ctx.timer.isRunning) {
+							if (!ctx.timer.getIsRunning()) {
 								ctx.timer.reset()
 							}
 						})

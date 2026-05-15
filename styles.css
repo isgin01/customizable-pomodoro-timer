@@ -13,19 +13,18 @@
 	transform: rotate(-90deg);
 }
 
-#circle1 {
-	fill: red;
+.animation-container #default {
+	fill: #ff1700;
 }
 
-#circle2 {
-	fill: var(--background-secondary);
-}
-
-#circle3 {
+.animation-container #elapsed {
 	stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-	stroke-dashoffset: 440;
-	stroke: green;
-	/* transition: all 0.2s linear; */
+	stroke-dashoffset: 450;
+	stroke: #06ff00;
+}
+
+.animation-container #bg {
+	fill: var(--background-secondary);
 }
 
 .custom-view-container {
