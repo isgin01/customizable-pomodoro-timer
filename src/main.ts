@@ -1,13 +1,12 @@
-import { Plugin } from "obsidian"
-
+import * as statusBar from "./status-bar"
 import {
+	BetterPomodoroSettingsTab,
 	DEFAULT_SETTINGS,
 	type PluginSettings,
-	BetterPomodoroSettingsTab,
 } from "./settings"
-import { Timer } from "./timer"
-import * as statusBar from "./status-bar"
 import { CustomView, PLUGIN_CUSTOM_VIEW_ID } from "./custom-view"
+import { Plugin } from "obsidian"
+import { Timer } from "./timer"
 
 export default class BetterPomodoroPlugin extends Plugin {
 	settings: PluginSettings
@@ -21,8 +20,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 		this.timer = new Timer(this.settings)
 
 		this.registerView(PLUGIN_CUSTOM_VIEW_ID, (leaf) => {
-			this.customView = new CustomView(leaf, this.timer)
-			return this.customView
+			return new CustomView(leaf, this.timer)
 		})
 
 		// this.loadCustomView()
@@ -76,11 +74,11 @@ export default class BetterPomodoroPlugin extends Plugin {
 	loadCustomView() {
 		if (this.settings.showCustomView) {
 			var { workspace } = this.app
-			let leaves = workspace.getLeavesOfType(PLUGIN_CUSTOM_VIEW_ID)
+			var leaves = workspace.getLeavesOfType(PLUGIN_CUSTOM_VIEW_ID)
 			if (!leaves.length) {
-				let leaf = workspace.getRightLeaf(false)
+				var leaf = workspace.getRightLeaf(false)
 				// TODO: is it ok to put ? here
-				leaf?.setViewState({
+				void leaf?.setViewState({
 					type: PLUGIN_CUSTOM_VIEW_ID,
 					// TODO: what does "active" really do?
 					// active: true,

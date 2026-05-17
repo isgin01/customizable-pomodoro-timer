@@ -1,4 +1,5 @@
-import { ItemView, setIcon, WorkspaceLeaf } from "obsidian"
+import { ItemView, WorkspaceLeaf, setIcon } from "obsidian"
+
 import { type Timer } from "./timer"
 
 export const PLUGIN_CUSTOM_VIEW_ID = "better-pomodoro-view"
@@ -26,7 +27,7 @@ export class CustomView extends ItemView {
 
 		// The order is important to make the elapsed circle appear above
 		// the default one
-		var defaultCircle = svg.createSvg("circle", {
+		svg.createSvg("circle", {
 			attr: { id: "default", cx: 70, cy: 70, r: 70, "stroke-width": 2 },
 		})
 
@@ -35,7 +36,7 @@ export class CustomView extends ItemView {
 		})
 		this.setElapsedCircleReach()
 
-		var bgCircle = svg.createSvg("circle", {
+		svg.createSvg("circle", {
 			attr: { id: "bg", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
 		})
 
@@ -104,7 +105,7 @@ export class CustomView extends ItemView {
 	}
 
 	getDisplayText() {
-		return "Pomodoro View"
+		return "Pomodoro view"
 	}
 
 	async onClose() {

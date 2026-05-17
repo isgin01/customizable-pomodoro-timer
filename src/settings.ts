@@ -1,3 +1,4 @@
+import * as statusBar from "./status-bar"
 import {
 	type App,
 	PluginSettingTab,
@@ -5,7 +6,6 @@ import {
 	type ToggleComponent,
 } from "obsidian"
 import type BetterPomodoroPlugin from "./main"
-import * as statusBar from "./status-bar"
 
 export type PluginSettings = {
 	workDurationSecs: number

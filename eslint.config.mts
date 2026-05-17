@@ -24,6 +24,7 @@ export default tseslint.config(
 	{
 		rules: {
 			"sort-imports": "error",
+			"no-var": "off",
 		},
 	},
 	globalIgnores([
