@@ -13,14 +13,9 @@
 	transform: rotate(-90deg);
 }
 
-.animation-container #default {
-	fill: #ff1700;
-}
-
 .animation-container #elapsed {
 	stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
 	stroke-dashoffset: 450;
-	stroke: #06ff00;
 }
 
 .animation-container #bg {

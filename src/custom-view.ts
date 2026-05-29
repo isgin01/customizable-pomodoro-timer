@@ -1,21 +1,27 @@
 import { ItemView, WorkspaceLeaf, setIcon } from "obsidian"
 
 import { type Timer } from "./timer"
+import { PluginSettings } from "settings"
 
 export const PLUGIN_CUSTOM_VIEW_ID = "better-pomodoro-view"
 
 export class CustomView extends ItemView {
 	private timer: Timer
+	private settings: PluginSettings
+
 	private toggleBtn: HTMLButtonElement
 	private resetBtn: HTMLButtonElement
 	private switchBtn: HTMLButtonElement
-	private elapsedCircle: SVGCircleElement
 
-	constructor(leaf: WorkspaceLeaf, timer: Timer) {
+	private remainingTimeCircle: SVGElement
+	private elapsedTimeCircle: SVGCircleElement
+
+	constructor(leaf: WorkspaceLeaf, timer: Timer, settings: PluginSettings) {
 		super(leaf)
 		this.timer = timer
 		this.containerEl.empty()
 		this.icon = "timer"
+		this.settings = settings
 
 		var container = this.containerEl.createDiv({
 			cls: "custom-view-container",
@@ -27,11 +33,11 @@ export class CustomView extends ItemView {
 
 		// The order is important to make the elapsed circle appear above
 		// the default one
-		svg.createSvg("circle", {
+		this.remainingTimeCircle = svg.createSvg("circle", {
 			attr: { id: "default", cx: 70, cy: 70, r: 70, "stroke-width": 2 },
 		})
 
-		this.elapsedCircle = svg.createSvg("circle", {
+		this.elapsedTimeCircle = svg.createSvg("circle", {
 			attr: { id: "elapsed", cx: 70, cy: 70, r: 60, "stroke-width": 20 },
 		})
 		this.setElapsedCircleReach()
@@ -39,6 +45,8 @@ export class CustomView extends ItemView {
 		svg.createSvg("circle", {
 			attr: { id: "bg", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
 		})
+
+		this.setColors()
 
 		// TODO: work/break text
 		// TODO: hover and click effects
@@ -85,21 +93,23 @@ export class CustomView extends ItemView {
 		})
 	}
 
+	setColors() {
+		this.remainingTimeCircle.style.fill =
+			this.settings.customViewColors.default
+		this.elapsedTimeCircle.style.stroke =
+			this.settings.customViewColors.elapsed
+	}
+
 	private updateModeBanner() {
 		var m = this.timer.getCurrentMode()
 	}
 
-	// TODO: it needs to be updated when the timer stops by itself
 	private updateToggleBtnIcon() {
-		if (this.timer.getIsRunning()) {
-			setIcon(this.toggleBtn, "pause")
-		} else {
-			setIcon(this.toggleBtn, "play")
-		}
+		setIcon(this.toggleBtn, this.timer.getIsRunning() ? "pause" : "play")
 	}
 
 	private setElapsedCircleReach() {
-		this.elapsedCircle.style.strokeDashoffset = String(
+		this.elapsedTimeCircle.style.strokeDashoffset = String(
 			(this.timer.getTimeLeft().secs / this.timer.getTotalSecs()) * 440,
 		)
 	}
