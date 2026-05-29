@@ -16,14 +16,12 @@ export default class BetterPomodoroPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings()
-
 		this.timer = new Timer(this.settings)
 
 		this.registerView(PLUGIN_CUSTOM_VIEW_ID, (leaf) => {
-			return new CustomView(leaf, this.timer)
+			this.customView = new CustomView(leaf, this.timer, this.settings)
+			return this.customView
 		})
-
-		// this.loadCustomView()
 
 		this.statusBarItem = this.addStatusBarItem()
 		statusBar.build(this.statusBarItem, this.timer)

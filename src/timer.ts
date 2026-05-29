@@ -166,15 +166,13 @@ function obsidianNotify(text: string) {
 }
 
 export function secondsToHF(secondsTotal: number) {
-	// Add a minus sign to the string if the seconds amount is negative
-	// and make the variable positive to avoid getting minus signs when
+	// Add a minus sign to the string if the second count is negative
+	// and make seconds positive to avoid getting minus signs when
 	// dividing
-	var humanTime: string
+	var humanTime = ""
 	if (secondsTotal < 0) {
 		humanTime = "-"
 		secondsTotal *= -1
-	} else {
-		humanTime = ""
 	}
 
 	const secondsLeft = secondsTotal % 60
@@ -182,14 +180,11 @@ export function secondsToHF(secondsTotal: number) {
 	const minutesLeft = minutesTotal % 60
 	const hoursTotal = (minutesTotal - minutesLeft) / 60
 
-	const paddedWithZerosTimeUnits = [hoursTotal, minutesLeft, secondsLeft].map(
-		function padTimeUnitsWithZeros(timeUnit: number) {
-			let paddedTimeUnit = String(timeUnit).padStart(2, "00")
-			return paddedTimeUnit
-		},
+	const paddedTimeUnits = [hoursTotal, minutesLeft, secondsLeft].map(
+		(timeUnit) => String(timeUnit).padStart(2, "00"),
 	)
 
-	humanTime += paddedWithZerosTimeUnits.join(":")
+	humanTime += paddedTimeUnits.join(":")
 
 	return humanTime
 }
