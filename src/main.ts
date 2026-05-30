@@ -12,6 +12,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 	settings: PluginSettings
 	timer: Timer
 	statusBarItem: HTMLElement
+	// Needed to reflect settings
 	customView: CustomView
 
 	async onload() {
