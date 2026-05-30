@@ -8,7 +8,7 @@ export class Timer {
 
 	private isRunning: boolean
 	private mode: "work" | "break"
-	// Total secs needed to track the amount initial of seconds
+	// Needed to track the initial amount of seconds of current mode
 	private totalSecs: number
 	private secsLeft: number
 	private onTickCallbacks: updateCallback[]

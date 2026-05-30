@@ -1,5 +1,5 @@
 import * as statusBar from "./status-bar"
-import { type App, PluginSettingTab, Setting } from "obsidian"
+import { type App, PluginSettingTab, Setting, type HexString } from "obsidian"
 import type BetterPomodoroPlugin from "./main"
 
 export type PluginSettings = {
@@ -9,7 +9,7 @@ export type PluginSettings = {
 	continueAfterTimeHasElapsed: boolean
 	showStatusBar: boolean
 	showCustomView: boolean
-	customViewColors: { remaining: string; elapsed: string }
+	customViewColors: { remaining: HexString; elapsed: HexString }
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	continueAfterTimeHasElapsed: true,
 	showCustomView: true,
 	showStatusBar: true,
-	customViewColors: { remaining: "#ff1700;", elapsed: "#06ff00" },
+	customViewColors: { remaining: "#ff1700", elapsed: "#06ff00" },
 }
 
 export class BetterPomodoroSettingsTab extends PluginSettingTab {
@@ -52,12 +52,8 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 					})
 			})
 
-		// TODO: render inactive
-
-		new Setting(containerEl).setName("Custom View").setHeading()
-
 		new Setting(containerEl)
-			.setName("Color for remaining time")
+			.setName("Show custom view")
 			.addToggle((component) => {
 				component
 					.setValue(this.plugin.settings.showCustomView)
@@ -71,15 +67,21 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 							} else {
 								ctx.hideCustomView()
 							}
+							this.display()
 						})
 					})
 			})
 
+		// TODO: render inactive
+
+		new Setting(containerEl).setName("Custom View").setHeading()
+
 		new Setting(containerEl)
-			.setName("Color for elapsed time")
+			.setName("Color for remaining time")
 			.addColorPicker((component) => {
 				component
 					.setValue(this.plugin.settings.customViewColors.remaining)
+					.setDisabled(!this.plugin.settings.showCustomView)
 					.onChange(async (newColor: string) => {
 						this.plugin.settings.customViewColors.remaining =
 							newColor
@@ -92,10 +94,11 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			})
 
 		new Setting(containerEl)
-			.setName("Set custom view colors")
+			.setName("Color for elapsed time")
 			.addColorPicker((component) => {
 				component
 					.setValue(this.plugin.settings.customViewColors.elapsed)
+					.setDisabled(!this.plugin.settings.showCustomView)
 					.onChange(async (newColor: string) => {
 						this.plugin.settings.customViewColors.elapsed = newColor
 						await this.plugin.saveSettings()
@@ -109,19 +112,24 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Reset colors")
 			.addButton((component) => {
-				component.setButtonText("Reset").onClick(async () => {
-					this.plugin.settings.customViewColors.elapsed =
-						DEFAULT_SETTINGS.customViewColors.elapsed
+				component
+					.setButtonText("Reset")
+					.setDisabled(!this.plugin.settings.showCustomView)
+					.onClick(async () => {
+						this.plugin.settings.customViewColors.elapsed =
+							DEFAULT_SETTINGS.customViewColors.elapsed
 
-					this.plugin.settings.customViewColors.remaining =
-						DEFAULT_SETTINGS.customViewColors.remaining
+						this.plugin.settings.customViewColors.remaining =
+							DEFAULT_SETTINGS.customViewColors.remaining
 
-					await this.plugin.saveSettings()
+						await this.plugin.saveSettings()
 
-					this.plugin.reflectSettingsChange((ctx) => {
-						ctx.customView.setColors()
+						this.plugin.reflectSettingsChange((ctx) => {
+							ctx.customView.setColors()
+						})
+
+						this.display()
 					})
-				})
 			})
 
 		new Setting(containerEl).setName("Timer").setHeading()
