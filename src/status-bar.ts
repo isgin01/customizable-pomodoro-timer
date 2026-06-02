@@ -32,7 +32,7 @@ export function buildStatusBar(el: HTMLElement, timer: Timer) {
 
 	timeUpdateHandler(timer.getTimeLeft().HFTime)
 
-	timer.registerUpdateCallback("tick", timeUpdateHandler)
+	timer.registerEventHandler("tick", timeUpdateHandler)
 }
 
 export function alterVisibility(show: boolean, el: HTMLElement) {

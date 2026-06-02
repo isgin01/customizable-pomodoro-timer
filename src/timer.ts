@@ -1,10 +1,12 @@
 import { type PluginSettings } from "settings"
-import { Notice } from "obsidian"
-import { playSound } from "./sound"
 
-export type updateCallback = (time?: string) => void
+type Event = "tick" | "elapsed" | "toggle"
+type Callback = (time?: string) => void
 
-type GetFile = (path: string) => string
+type EventHandler = {
+	event: Event
+	cb: Callback
+}
 
 export class Timer {
 	private readonly settings: PluginSettings
@@ -14,12 +16,10 @@ export class Timer {
 	// Needed to track the initial amount of seconds of current mode
 	private totalSecs: number
 	private secsLeft: number
-	private onTickCallbacks: updateCallback[]
-	private onToggleCallbacks: updateCallback[]
+	private eventHandlers: EventHandler[] = []
 	private intervalId: number | undefined
-	private getFile: GetFile
 
-	constructor(settings: PluginSettings, getFile: GetFile) {
+	constructor(settings: PluginSettings) {
 		// It's important to make sure that seetings are assigned first since
 		// they can be used for other props initialization
 		this.settings = settings
@@ -27,9 +27,6 @@ export class Timer {
 		this.isRunning = false
 		// TODO: load the previous mode instead
 		this.mode = "work"
-		this.onTickCallbacks = []
-		this.onToggleCallbacks = []
-		this.getFile = getFile
 
 		this.resetSecondsCount(true)
 	}
@@ -73,12 +70,8 @@ export class Timer {
 		}
 	}
 
-	registerUpdateCallback(type: "tick" | "toggle", cb: updateCallback): void {
-		if (type == "tick") {
-			this.onTickCallbacks.push(cb)
-		} else if (type == "toggle") {
-			this.onToggleCallbacks.push(cb)
-		}
+	registerEventHandler(event: Event, cb: Callback): void {
+		this.eventHandlers.push({ event, cb })
 	}
 
 	toggle(): void {
@@ -88,7 +81,7 @@ export class Timer {
 			this.start()
 		}
 
-		this.runOnToggleCallbacks()
+		this.runEventHandlers("toggle")
 	}
 
 	private start(): void {
@@ -105,26 +98,13 @@ export class Timer {
 
 	private tick(): void {
 		this.secsLeft--
-		this.runOnTickCallbacks()
+		this.runEventHandlers("tick")
 		if (this.secsLeft == 0) {
+			this.runEventHandlers("elapsed")
+
 			if (!this.settings.continueAfterTimeHasElapsed) {
 				this.switch()
 			}
-
-			// TODO: Custom user message template
-			this.notify(`Time has elapsed. Next mode: ${this.mode}`)
-		}
-	}
-
-	private notify(text: string): void {
-		if (this.settings.systemNotificationsPreferred) {
-			systemNotify(text)
-		} else {
-			obsidianNotify(text)
-		}
-
-		if (this.settings.playNotificationSound) {
-			playSound(this.getFile(this.settings.customNotificationSound))
 		}
 	}
 
@@ -136,8 +116,8 @@ export class Timer {
 	reset(): void {
 		this.stop()
 		this.resetSecondsCount()
-		this.runOnTickCallbacks()
-		this.runOnToggleCallbacks()
+		this.runEventHandlers("tick")
+		this.runEventHandlers("toggle")
 	}
 
 	private stop(): void {
@@ -146,30 +126,15 @@ export class Timer {
 		window.clearInterval(this.intervalId)
 	}
 
-	private runOnTickCallbacks() {
-		this.onTickCallbacks.forEach((cb) => cb(this.getTimeLeft().HFTime))
-	}
-
-	private runOnToggleCallbacks() {
-		this.onToggleCallbacks.forEach((cb) => cb())
+	private runEventHandlers(ev: Event) {
+		this.eventHandlers.forEach((h) =>
+			h.event == ev ? h.cb(this.getTimeLeft().HFTime) : undefined,
+		)
 	}
 
 	destroy(): void {
 		// TODO: add time left saving
 	}
-}
-
-function systemNotify(text: string) {
-	var { Notification } = require("electron").remote
-
-	new Notification({
-		title: "Timer",
-		body: text,
-	}).show()
-}
-
-function obsidianNotify(text: string) {
-	new Notice(text)
 }
 
 export function secondsToHF(secondsTotal: number) {

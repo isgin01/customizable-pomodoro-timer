@@ -54,7 +54,7 @@ export class CustomView extends ItemView {
 
 		var timeContainer = container.createSpan({ cls: "time-container" })
 		timeContainer.innerHTML = timer.getTimeLeft().HFTime
-		this.timer.registerUpdateCallback("tick", (HFTime: string) => {
+		this.timer.registerEventHandler("tick", (HFTime: string) => {
 			timeContainer.innerText = HFTime
 			this.setElapsedCircleReach()
 		})
@@ -73,7 +73,7 @@ export class CustomView extends ItemView {
 		this.toggleBtn.addEventListener("click", () => {
 			this.timer.toggle()
 		})
-		this.timer.registerUpdateCallback("toggle", () => {
+		this.timer.registerEventHandler("toggle", () => {
 			this.setToggleBtnIcon()
 		})
 

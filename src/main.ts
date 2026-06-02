@@ -5,8 +5,9 @@ import {
 	type PluginSettings,
 } from "./settings"
 import { CustomView, PLUGIN_CUSTOM_VIEW_ID } from "./custom-view"
-import { Plugin, TFile } from "obsidian"
+import { Notice, Plugin, TFile } from "obsidian"
 import { Timer } from "./timer"
+import { playSound } from "sound"
 
 export default class BetterPomodoroPlugin extends Plugin {
 	settings: PluginSettings
@@ -18,11 +19,20 @@ export default class BetterPomodoroPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings()
 
-		this.timer = new Timer(
-			this.settings,
-			// Use closure in order to avoid accessing incorrect "this"
-			(path: string) => this.getFile(path),
-		)
+		this.timer = new Timer(this.settings)
+
+		this.timer.registerEventHandler("elapsed", () => {
+			// Use a conditional expression because settings can changed during run
+			// and the onload function would not be reloaded
+			if (this.settings.playNotificationSound) {
+				playSound(this.getFile(this.settings.customNotificationSound))
+			}
+		})
+
+		// TODO: Custom message template
+		this.timer.registerEventHandler("elapsed", () => {
+			this.notify(`Time has elapsed`)
+		})
 
 		this.registerView(PLUGIN_CUSTOM_VIEW_ID, (leaf) => {
 			this.customView = new CustomView(leaf, this.timer, this.settings)
@@ -108,4 +118,26 @@ export default class BetterPomodoroPlugin extends Plugin {
 		}
 		return ""
 	}
+
+	// TODO: show notification
+	notify(text: string): void {
+		if (this.settings.systemNotificationsPreferred) {
+			systemNotify(text)
+		} else {
+			obsidianNotify(text)
+		}
+	}
+}
+
+function systemNotify(text: string) {
+	var { Notification } = require("electron").remote
+
+	new Notification({
+		title: "Timer",
+		body: text,
+	}).show()
+}
+
+function obsidianNotify(text: string) {
+	new Notice(text)
 }
