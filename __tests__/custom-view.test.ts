@@ -4,7 +4,7 @@ import { Timer } from "../src/timer"
 import { DEFAULT_SETTINGS } from "../src/settings"
 
 it("init", () => {
-	var timer = new Timer(DEFAULT_SETTINGS, jest.fn())
+	var timer = new Timer(DEFAULT_SETTINGS)
 	var v = new CustomView({} as WorkspaceLeaf, timer, DEFAULT_SETTINGS)
 
 	expect(v.getDisplayText()).toBe("Xxx pomodoro view")

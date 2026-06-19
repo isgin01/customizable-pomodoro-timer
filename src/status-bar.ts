@@ -1,44 +1,50 @@
 import { Menu } from "obsidian"
 import { type Timer } from "./timer"
 
-export function buildStatusBar(el: HTMLElement, timer: Timer) {
-	// Make the status bar clickable
-	el.className += " mod-clickable"
+export default class StatusBar {
+	element: HTMLElement
 
-	el.addEventListener("click", () => {
-		timer.toggle()
-	})
+	constructor(element: HTMLElement, timer: Timer) {
+		this.element = element
 
-	// Menu that will appear on auxclick
+		// Make the status bar clickable
+		element.className += " mod-clickable"
 
-	let menu = new Menu()
+		element.addEventListener("click", () => {
+			timer.toggle()
+		})
 
-	menu.addItem((i) => {
-		i.setTitle("Reset").onClick(() => timer.reset())
-	})
-	menu.addItem((i) => {
-		i.setTitle("Switch").onClick(() => timer.switch())
-	})
+		// Menu that will appear on auxclick
 
-	el.addEventListener("auxclick", (ev) => {
-		menu.showAtMouseEvent(ev)
-	})
+		let menu = new Menu()
 
-	let timeUpdateHandler = (HFTime: string) => {
-		el.innerHTML = `<span>${HFTime}</span>`
+		menu.addItem((i) => {
+			i.setTitle("Reset").onClick(() => timer.reset())
+		})
+		menu.addItem((i) => {
+			i.setTitle("Switch").onClick(() => timer.switch())
+		})
+
+		element.addEventListener("auxclick", (ev) => {
+			menu.showAtMouseEvent(ev)
+		})
+
+		let timeUpdateHandler = (HFTime: string) => {
+			element.innerHTML = `<span>${HFTime}</span>`
+		}
+
+		// Set initial value
+
+		timeUpdateHandler(timer.getTimeLeft().HFTime)
+
+		timer.registerEventHandler("tick", timeUpdateHandler)
 	}
 
-	// Set initial value
-
-	timeUpdateHandler(timer.getTimeLeft().HFTime)
-
-	timer.registerEventHandler("tick", timeUpdateHandler)
-}
-
-export function alterVisibility(show: boolean, el: HTMLElement) {
-	if (show) {
-		el.style.display = "block"
-	} else {
-		el.style.display = "none"
+	alterVisibility(show: boolean) {
+		if (show) {
+			this.element.style.display = "block"
+		} else {
+			this.element.style.display = "none"
+		}
 	}
 }

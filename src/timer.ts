@@ -8,51 +8,61 @@ type EventHandler = {
 	cb: Callback
 }
 
+type Mode = "work" | "break"
+
+type InitialState = {
+	mode: Mode
+	secsTODO: number
+	secsLeft: number
+	running: boolean
+}
+
 export class Timer {
 	private readonly settings: PluginSettings
 
-	private isRunning: boolean
-	private mode: "work" | "break"
-	// Needed to track the initial amount of seconds of current mode
-	private totalSecs: number
+	private running: boolean
+	private mode: Mode
+
+	// TODO: need a better name, used to track how many seconds were when current mode started
+	// in order for animations to work correctly
+	private secsTODO: number
 	private secsLeft: number
+
 	private eventHandlers: EventHandler[] = []
 	private intervalId: number | undefined
 
-	constructor(settings: PluginSettings) {
+	constructor(settings: PluginSettings, initData?: InitialState) {
 		// It's important to make sure that seetings are assigned first since
 		// they can be used for other props initialization
 		this.settings = settings
 
-		this.isRunning = false
-		// TODO: load the previous mode instead
-		this.mode = "work"
-
-		this.resetSecondsCount(true)
+		if (initData) {
+			this.running = initData.running
+			this.mode = initData.mode
+			this.secsTODO = initData.secsTODO
+			this.secsLeft = initData.secsLeft
+		} else {
+			this.running = false
+			this.mode = "work"
+			this.resetSecs()
+		}
 	}
 
-	private resetSecondsCount(tryRecover?: boolean) {
-		// Set seconds count
-		// First, try to restore from previous session if it wasn't explicitly stopped
-		// Otherwise, simply use a value from settings
-
-		this.totalSecs =
+	private resetSecs() {
+		this.secsTODO =
 			this.mode == "work"
 				? this.settings.workDurationSecs
 				: this.settings.breakDurationSecs
 
-		// TODO: recover previous session
-
-		// otherwise
-		this.secsLeft = this.totalSecs
+		this.secsLeft = this.secsTODO
 	}
 
 	getIsRunning() {
-		return this.isRunning
+		return this.running
 	}
 
 	getTotalSecs(): number {
-		return this.totalSecs
+		return this.secsTODO
 	}
 
 	getCurrentMode(): string {
@@ -75,7 +85,7 @@ export class Timer {
 	}
 
 	toggle(): void {
-		if (this.isRunning) {
+		if (this.running) {
 			this.stop()
 		} else {
 			this.start()
@@ -85,7 +95,7 @@ export class Timer {
 	}
 
 	private start(): void {
-		this.isRunning = true
+		this.running = true
 
 		const oneSecondMillis = 1000
 
@@ -115,13 +125,13 @@ export class Timer {
 
 	reset(): void {
 		this.stop()
-		this.resetSecondsCount()
+		this.resetSecs()
 		this.runEventHandlers("tick")
 		this.runEventHandlers("toggle")
 	}
 
 	private stop(): void {
-		this.isRunning = false
+		this.running = false
 
 		window.clearInterval(this.intervalId)
 	}

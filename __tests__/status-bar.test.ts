@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS } from "../src/settings"
 import { buildStatusBar } from "../src/status-bar"
-import { Timer, type updateCallback } from "../src/timer"
+import { Timer } from "../src/timer"
 
 // http://stackoverflow.com/questions/61881027/ddg#61883392
 class MyTestElement extends HTMLElement {
@@ -13,7 +13,7 @@ jest.useFakeTimers()
 
 window.customElements.define("my-test-element", MyTestElement)
 
-var timer = new Timer(DEFAULT_SETTINGS, jest.fn())
+var timer = new Timer(DEFAULT_SETTINGS)
 var statusBarHTMLElement = new MyTestElement()
 var statusBar = buildStatusBar(statusBarHTMLElement, timer)
 

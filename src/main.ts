@@ -1,4 +1,4 @@
-import * as statusBar from "./status-bar"
+import StatusBar from "./status-bar"
 import {
 	BetterPomodoroSettingsTab,
 	DEFAULT_SETTINGS,
@@ -12,7 +12,7 @@ import { playSound } from "sound"
 export default class BetterPomodoroPlugin extends Plugin {
 	settings: PluginSettings
 	timer: Timer
-	statusBarItem: HTMLElement
+	statusBar: StatusBar
 	// Needed to reflect settings
 	customView: CustomView
 
@@ -39,12 +39,8 @@ export default class BetterPomodoroPlugin extends Plugin {
 			return this.customView
 		})
 
-		this.statusBarItem = this.addStatusBarItem()
-		statusBar.buildStatusBar(this.statusBarItem, this.timer)
-		statusBar.alterVisibility(
-			this.settings.showStatusBar,
-			this.statusBarItem,
-		)
+		this.statusBar = new StatusBar(this.addStatusBarItem(), this.timer)
+		this.statusBar.alterVisibility(this.settings.showStatusBar)
 
 		this.addCommand({
 			id: "toggle",

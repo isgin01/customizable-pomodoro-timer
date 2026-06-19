@@ -1,4 +1,3 @@
-import * as statusBar from "./status-bar"
 import { type App, PluginSettingTab, Setting, type HexString } from "obsidian"
 import type BetterPomodoroPlugin from "./main"
 import { playSound } from "./sound"
@@ -52,7 +51,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							statusBar.alterVisibility(val, ctx.statusBarItem)
+							ctx.statusBar.alterVisibility(val)
 						})
 					})
 			})
