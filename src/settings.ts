@@ -3,8 +3,8 @@ import type BetterPomodoroPlugin from "./main"
 import { playSound } from "./sound"
 
 export type PluginSettings = {
-	workDurationSecs: number
-	breakDurationSecs: number
+	workSecs: number
+	breakSecs: number
 	systemNotificationsPreferred: boolean
 	continueAfterTimeHasElapsed: boolean
 	showStatusBar: boolean
@@ -15,8 +15,8 @@ export type PluginSettings = {
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-	workDurationSecs: 50 * 60,
-	breakDurationSecs: 10 * 60,
+	workSecs: 50 * 60,
+	breakSecs: 10 * 60,
 	systemNotificationsPreferred: false,
 	continueAfterTimeHasElapsed: true,
 	showCustomView: true,
@@ -140,15 +140,15 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName("Work duration").addText((text) => {
 			text.setPlaceholder("Enter time in minutes")
-				.setValue(String(this.plugin.settings.workDurationSecs / 60))
+				.setValue(String(this.plugin.settings.workSecs / 60))
 				.onChange(async (i: string) => {
 					let minutes = validateNumericInput(i)
 					if (minutes) {
-						this.plugin.settings.workDurationSecs = minutes * 60
+						this.plugin.settings.workSecs = minutes * 60
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							if (!ctx.timer.getIsRunning()) {
+							if (!ctx.timer.running) {
 								ctx.timer.reset()
 							}
 						})
@@ -158,15 +158,15 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName("Break duration").addText((text) => {
 			text.setPlaceholder("Enter time in minutes")
-				.setValue(String(this.plugin.settings.breakDurationSecs / 60))
+				.setValue(String(this.plugin.settings.breakSecs / 60))
 				.onChange(async (i: string) => {
 					let minutes = validateNumericInput(i)
 					if (minutes) {
-						this.plugin.settings.breakDurationSecs = minutes * 60
+						this.plugin.settings.breakSecs = minutes * 60
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							if (!ctx.timer.getIsRunning()) {
+							if (!ctx.timer.running) {
 								ctx.timer.reset()
 							}
 						})

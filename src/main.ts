@@ -70,7 +70,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.timer.destroy()
+		// TODO:
 	}
 
 	private async loadSettings() {

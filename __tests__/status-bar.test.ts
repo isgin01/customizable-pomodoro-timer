@@ -1,9 +1,8 @@
 import { DEFAULT_SETTINGS } from "../src/settings"
-import { buildStatusBar } from "../src/status-bar"
+import StatusBar from "../src/status-bar"
 import { Timer } from "../src/timer"
 
-// http://stackoverflow.com/questions/61881027/ddg#61883392
-class MyTestElement extends HTMLElement {
+class FakeStatusBar extends HTMLElement {
 	constructor() {
 		super()
 	}
@@ -11,100 +10,43 @@ class MyTestElement extends HTMLElement {
 
 jest.useFakeTimers()
 
-window.customElements.define("my-test-element", MyTestElement)
+window.customElements.define("fake-status-bar", FakeStatusBar)
 
-var timer = new Timer(DEFAULT_SETTINGS)
-var statusBarHTMLElement = new MyTestElement()
-var statusBar = buildStatusBar(statusBarHTMLElement, timer)
+it("initialization", () => {
+	let settings = { ...DEFAULT_SETTINGS }
+	settings.workSecs = 40 * 60
 
-it.only("default time displaying", () => {
-	expect(statusBarHTMLElement.innerHTML).toContain("<span>00:50:00</span>")
+	var timer = new Timer(settings)
+	var element = new FakeStatusBar()
+	new StatusBar(element, timer)
+
+	expect(element.innerHTML).toContain("<span>00:40:00</span>")
 
 	timer.toggle()
-	expect(timer.getCurrentMode()).toBe("work")
-	expect(timer.getIsRunning()).toBe(true)
+	expect(timer.mode).toBe("work")
+	expect(timer.running).toBe(true)
 
 	jest.advanceTimersByTime(1000 * 60)
-	expect(statusBarHTMLElement.innerHTML).toContain("<span>00:49:00</span>")
-	jest.advanceTimersByTime(1000 * 60 * 49)
-	expect(statusBarHTMLElement.innerHTML).toContain("<span>00:00:00</span>")
+	expect(element.innerHTML).toContain("<span>00:39:00</span>")
+	jest.advanceTimersByTime(1000 * 60 * 39)
+	expect(element.innerHTML).toContain("<span>00:00:00</span>")
 	jest.advanceTimersByTime(1000 * 60 * 10)
-	expect(statusBarHTMLElement.innerHTML).toContain("<span>-00:10:00</span>")
+	expect(element.innerHTML).toContain("<span>-00:10:00</span>")
 })
 
-describe("updating", () => {
-	it("correctly register on tick updaters", () => {
-		var timeUpdateHandlers: updateCallback[] = []
+it("clicks", () => {
+	let settings = { ...DEFAULT_SETTINGS }
+	settings.workSecs = 40 * 60
 
-		timer = {
-			...timer,
-			registerUpdateCallback: jest.fn(
-				(timeUpdateHandler: updateCallback) => {
-					timeUpdateHandlers.push(timeUpdateHandler)
-				},
-			),
-		}
+	var timer = new Timer(settings)
+	var element = new FakeStatusBar()
 
-		buildStatusBar(statusBarHTMLElement, timer as any)
-		expect(timer.registerUpdateCallback).toHaveBeenCalled()
-		expect(timeUpdateHandlers).toHaveLength(1)
-	})
+	new StatusBar(element, timer)
 
-	it("update time", () => {
-		var onTickTestCallback: updateCallback = () => { }
+	expect(element.className).toContain("mod-clickable")
 
-		var registerUpdateCallback = jest.fn((newUpdater: updateCallback) => {
-			onTickTestCallback = newUpdater
-		})
-
-		timer = {
-			...timer,
-			registerUpdateCallback,
-		}
-
-		buildStatusBar(statusBarHTMLElement, timer as any)
-
-		HFTime = "00:00:00"
-		onTickTestCallback(HFTime)
-		expect(statusBarHTMLElement.innerHTML).toContain(HFTime)
-
-		HFTime = "11:11:11"
-		onTickTestCallback(HFTime)
-		expect(statusBarHTMLElement.innerHTML).toContain(HFTime)
-
-		HFTime = "-11:11:11"
-		onTickTestCallback(HFTime)
-		expect(statusBarHTMLElement.innerHTML).toContain(HFTime)
-	})
-})
-
-describe("interactions", () => {
-	it("check if clickable", () => {
-		buildStatusBar(statusBarHTMLElement, timer as any)
-
-		let indicatorThatElementIsClickable = "mod-clickable"
-		console.log(statusBarHTMLElement)
-		expect(statusBarHTMLElement.className).toContain(
-			indicatorThatElementIsClickable,
-		)
-	})
-
-	it("regular and auxiliary click interaction", () => {
-		timer = {
-			...timer,
-			toggle: jest.fn(),
-			reset: jest.fn(),
-		}
-		buildStatusBar(statusBarHTMLElement, timer as any)
-
-		let clickEvent = new Event("click")
-		statusBarHTMLElement.dispatchEvent(clickEvent)
-		// Must be called once
-		expect(timer.toggle).toHaveBeenCalledTimes(1)
-
-		let auxiliaryClickEvent = new Event("auxclick")
-		statusBarHTMLElement.dispatchEvent(auxiliaryClickEvent)
-		// TODO: ensure that addItem is called twice or something
-		// expect(timer.reset).toHaveBeenCalledTimes(1);
-	})
+	let fakeToggle = jest.spyOn(timer, "toggle")
+	let clickEvent = new Event("click")
+	element.dispatchEvent(clickEvent)
+	expect(fakeToggle).toHaveBeenCalledTimes(1)
 })
