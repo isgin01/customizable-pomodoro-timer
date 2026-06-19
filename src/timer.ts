@@ -1,7 +1,7 @@
 import { type PluginSettings } from "settings"
 
 type Event = "tick" | "elapsed" | "toggle"
-type Callback = (time?: string) => void
+type Callback = (HFTime?: string) => void
 
 type EventHandler = {
 	event: Event
@@ -12,7 +12,7 @@ type Mode = "work" | "break"
 
 type InitialState = {
 	mode: Mode
-	secsTODO: number
+	initSecsCount: number
 	secsLeft: number
 	running: boolean
 }
@@ -20,26 +20,21 @@ type InitialState = {
 export class Timer {
 	private readonly settings: PluginSettings
 
-	private running: boolean
-	private mode: Mode
-
-	// TODO: need a better name, used to track how many seconds were when current mode started
-	// in order for animations to work correctly
-	private secsTODO: number
-	private secsLeft: number
+	running: boolean
+	mode: Mode
+	initSecsCount: number
+	secsLeft: number
 
 	private eventHandlers: EventHandler[] = []
 	private intervalId: number | undefined
 
 	constructor(settings: PluginSettings, initData?: InitialState) {
-		// It's important to make sure that seetings are assigned first since
-		// they can be used for other props initialization
 		this.settings = settings
 
 		if (initData) {
 			this.running = initData.running
 			this.mode = initData.mode
-			this.secsTODO = initData.secsTODO
+			this.initSecsCount = initData.initSecsCount
 			this.secsLeft = initData.secsLeft
 		} else {
 			this.running = false
@@ -49,35 +44,12 @@ export class Timer {
 	}
 
 	private resetSecs() {
-		this.secsTODO =
+		this.initSecsCount =
 			this.mode == "work"
-				? this.settings.workDurationSecs
-				: this.settings.breakDurationSecs
+				? this.settings.workSecs
+				: this.settings.breakSecs
 
-		this.secsLeft = this.secsTODO
-	}
-
-	getIsRunning() {
-		return this.running
-	}
-
-	getTotalSecs(): number {
-		return this.secsTODO
-	}
-
-	getCurrentMode(): string {
-		return this.mode
-	}
-
-	getTimeLeft(): {
-		secs: number
-		HFTime: string
-	} {
-		let seconds = this.secsLeft
-		return {
-			secs: seconds,
-			HFTime: secondsToHF(seconds),
-		}
+		this.secsLeft = this.initSecsCount
 	}
 
 	registerEventHandler(event: Event, cb: Callback): void {
@@ -136,37 +108,36 @@ export class Timer {
 		window.clearInterval(this.intervalId)
 	}
 
+	// TODO: this looks weird
 	private runEventHandlers(ev: Event) {
 		this.eventHandlers.forEach((h) =>
-			h.event == ev ? h.cb(this.getTimeLeft().HFTime) : undefined,
+			h.event == ev ? h.cb(this.HFTime) : undefined,
 		)
 	}
 
-	destroy(): void {
-		// TODO: add time left saving
+	get HFTime() {
+		var humanTime = ""
+		var savedSecs = this.secsLeft
+
+		// Add a minus sign to the string if the second count is negative
+		// and make seconds positive to avoid getting minus signs when
+		// dividing
+		if (this.secsLeft < 0) {
+			humanTime = "-"
+			savedSecs *= -1
+		}
+
+		const secondsLeft = savedSecs % 60
+		const minutesTotal = (savedSecs - secondsLeft) / 60
+		const minutesLeft = minutesTotal % 60
+		const hoursTotal = (minutesTotal - minutesLeft) / 60
+
+		const paddedTimeUnits = [hoursTotal, minutesLeft, secondsLeft].map(
+			(timeUnit) => String(timeUnit).padStart(2, "00"),
+		)
+
+		humanTime += paddedTimeUnits.join(":")
+
+		return humanTime
 	}
-}
-
-export function secondsToHF(secondsTotal: number) {
-	// Add a minus sign to the string if the second count is negative
-	// and make seconds positive to avoid getting minus signs when
-	// dividing
-	var humanTime = ""
-	if (secondsTotal < 0) {
-		humanTime = "-"
-		secondsTotal *= -1
-	}
-
-	const secondsLeft = secondsTotal % 60
-	const minutesTotal = (secondsTotal - secondsLeft) / 60
-	const minutesLeft = minutesTotal % 60
-	const hoursTotal = (minutesTotal - minutesLeft) / 60
-
-	const paddedTimeUnits = [hoursTotal, minutesLeft, secondsLeft].map(
-		(timeUnit) => String(timeUnit).padStart(2, "00"),
-	)
-
-	humanTime += paddedTimeUnits.join(":")
-
-	return humanTime
 }

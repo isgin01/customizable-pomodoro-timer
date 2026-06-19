@@ -53,7 +53,7 @@ export class CustomView extends ItemView {
 		// TODO: work/break text
 
 		var timeContainer = container.createSpan({ cls: "time-container" })
-		timeContainer.innerHTML = timer.getTimeLeft().HFTime
+		timeContainer.innerHTML = timer.HFTime
 		this.timer.registerEventHandler("tick", (HFTime: string) => {
 			timeContainer.innerText = HFTime
 			this.setElapsedCircleReach()
@@ -104,16 +104,16 @@ export class CustomView extends ItemView {
 	}
 
 	private updateModeBanner() {
-		var m = this.timer.getCurrentMode()
+		var m = this.timer.mode
 	}
 
 	private setToggleBtnIcon() {
-		setIcon(this.toggleBtn, this.timer.getIsRunning() ? "pause" : "play")
+		setIcon(this.toggleBtn, this.timer.running ? "pause" : "play")
 	}
 
 	private setElapsedCircleReach() {
 		this.elapsedTimeCircle.style.strokeDashoffset = String(
-			(this.timer.getTimeLeft().secs / this.timer.getTotalSecs()) * 440,
+			(this.timer.secsLeft / this.timer.initSecsCount) * 440,
 		)
 	}
 

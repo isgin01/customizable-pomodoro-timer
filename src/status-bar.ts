@@ -2,7 +2,7 @@ import { Menu } from "obsidian"
 import { type Timer } from "./timer"
 
 export default class StatusBar {
-	element: HTMLElement
+	private element: HTMLElement
 
 	constructor(element: HTMLElement, timer: Timer) {
 		this.element = element
@@ -35,7 +35,7 @@ export default class StatusBar {
 
 		// Set initial value
 
-		timeUpdateHandler(timer.getTimeLeft().HFTime)
+		timeUpdateHandler(timer.HFTime)
 
 		timer.registerEventHandler("tick", timeUpdateHandler)
 	}

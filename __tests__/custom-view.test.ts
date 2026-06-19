@@ -10,5 +10,5 @@ it("init", () => {
 	expect(v.getDisplayText()).toBe("Xxx pomodoro view")
 	expect(v.getViewType()).toBe("xxx-pomodoro-view")
 	expect(v.icon).toBe("timer")
-	expect(timer.getIsRunning()).toBe(false)
+	expect(timer.running).toBe(false)
 })
