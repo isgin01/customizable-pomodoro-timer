@@ -5,10 +5,10 @@ import {
 } from "./settings"
 import { CustomView, PLUGIN_CUSTOM_VIEW_ID } from "./custom-view"
 import { Plugin, TFile } from "obsidian"
+import { Timer, recoverableTimerState } from "./timer"
 import StatusBar from "./status-bar"
-import { recoverableTimerState, Timer } from "./timer"
-import { playSound } from "./sound"
 import { notify } from "utils"
+import { playSound } from "./sound"
 
 const SAVED_SESSION_KEY = "isgin-timer-saved-session"
 
@@ -20,11 +20,11 @@ export default class BetterPomodoroPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings()
 
-		this.timer = new Timer(this.settings)
+		this.timer = new Timer(this.settings, this.recoverLastSession())
 
 		this.timer.registerEventHandler("elapsed", () => {
-			// Use a conditional expression because settings can changed during run
-			// and the onload function would not be reloaded
+			// Settings can get changed during the timer run,
+			// so it's important to check
 			if (this.settings.playNotificationSound) {
 				playSound(this.getFile(this.settings.customNotificationSound))
 			}
@@ -70,10 +70,10 @@ export default class BetterPomodoroPlugin extends Plugin {
 		})
 
 		this.addSettingTab(new BetterPomodoroSettingsTab(this.app, this))
-	}
 
-	onunload() {
-		// TODO: timer state saving
+		this.app.workspace.on("quit", () => {
+			this.saveTimerSession(this.timer.recoverableState)
+		})
 	}
 
 	private async loadSettings() {
@@ -110,11 +110,28 @@ export default class BetterPomodoroPlugin extends Plugin {
 		await this.saveData(this.settings)
 	}
 
-	saveSession(s: recoverableTimerState) {
+	/* eslint-disable */
+	recoverLastSession(): recoverableTimerState | undefined {
+		let res = this.retrieveStored(SAVED_SESSION_KEY)
+		if (res) {
+			return JSON.parse(res)
+		}
+		return
+	}
+	/* eslint-enable */
+
+	/* eslint-disable */
+	private retrieveStored(k: string): any | null {
+		return this.app.loadLocalStorage(k)
+	}
+	/* eslint-enable */
+
+	saveTimerSession(s: recoverableTimerState): void {
+		console.log("save session")
 		this.saveArbitrary(SAVED_SESSION_KEY, JSON.stringify(s))
 	}
 
-	private saveArbitrary(k: string, s: string) {
+	private saveArbitrary(k: string, s: string): void {
 		this.app.saveLocalStorage(k, s)
 	}
 
