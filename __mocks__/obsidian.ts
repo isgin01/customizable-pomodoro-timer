@@ -11,12 +11,13 @@ export class ItemView {
 		// used to simulate DOM manipulations
 		let mock: any = {
 			style: { strokeDashoffset: "", fill: "" },
-			empty: jest.fn(() => mock),
+			empty: jest.fn(),
 			createDiv: jest.fn(() => mock),
 			createSpan: jest.fn(() => mock),
 			createSvg: jest.fn(() => mock),
 			createEl: jest.fn(() => mock),
-			addEventListener: jest.fn(() => mock),
+			addEventListener: jest.fn(),
+			getElementsByClassName: jest.fn(() => []),
 		}
 
 		this.containerEl = mock

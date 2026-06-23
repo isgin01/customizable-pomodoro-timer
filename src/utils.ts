@@ -22,3 +22,7 @@ function systemNotify(text: string) {
 function obsidianNotify(text: string) {
 	new Notice(text)
 }
+
+export function alterVisibility(el: HTMLElement, show: boolean) {
+	el.setCssProps({ display: show ? "block" : "none" })
+}

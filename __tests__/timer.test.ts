@@ -16,7 +16,7 @@ function getSettingsHelper(
 		continueAfterTimeHasElapsed: false,
 		showCustomView: false,
 		showStatusBar: false,
-		customViewColors: { remaining: "", elapsed: "" },
+		CvColors: { remaining: "", elapsed: "" },
 		playNotificationSound: false,
 		customNotificationSound: "",
 	}
@@ -55,7 +55,7 @@ test("event handler func called correct amount of times", () => {
 	)
 
 	let cb = jest.fn()
-	timer.registerEventHandler("tick", cb)
+	timer.on(["tick"], cb)
 	timer.toggle()
 
 	jest.advanceTimersByTime(1000)
@@ -130,7 +130,7 @@ describe("create an instance of Timer from initial state", () => {
 		expect(timer.remaining).toBe(4)
 
 		let testCb = jest.fn()
-		timer.registerEventHandler("tick", testCb)
+		timer.on(["tick"], testCb)
 		jest.advanceTimersByTime(1000)
 		expect(testCb).toHaveBeenCalledTimes(1)
 		expect(timer.remaining).toBe(3)

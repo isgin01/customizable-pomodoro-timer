@@ -13,12 +13,12 @@
 	transform: rotate(-90deg);
 }
 
-.animation-container #elapsed {
+.animation-container .elapsed {
 	stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
 	stroke-dashoffset: 450;
 }
 
-.animation-container #bg {
+.animation-container .bg {
 	fill: var(--background-secondary);
 }
 

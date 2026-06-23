@@ -3,10 +3,10 @@ import {
 	DEFAULT_SETTINGS,
 	type PluginSettings,
 } from "./settings"
-import { CustomView, PLUGIN_CUSTOM_VIEW_ID } from "./custom-view"
-import { Plugin, TFile } from "obsidian"
+import { CustomView, CUSTOM_VIEW_ID } from "./custom-view"
+import { Plugin, TFile, WorkspaceLeaf } from "obsidian"
 import { Timer, recoverableTimerState } from "./timer"
-import StatusBar from "./status-bar"
+import buildStatusBarItem from "./status-bar"
 import { notify } from "utils"
 import { playSound } from "./sound"
 
@@ -15,7 +15,7 @@ const SAVED_SESSION_KEY = "isgin-timer-saved-session"
 export default class BetterPomodoroPlugin extends Plugin {
 	settings: PluginSettings
 	timer: Timer
-	statusBar: StatusBar
+	statusBarItem: HTMLElement
 
 	async onload() {
 		await this.loadSettings()
@@ -24,7 +24,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 
 		this.timer = new Timer(this.settings, this.recoverLastSession())
 
-		this.timer.registerEventHandler("elapsed", () => {
+		this.timer.on(["elapsed"], () => {
 			// Settings can get changed during the timer run,
 			// so it's important to check
 			if (this.settings.playNotificationSound) {
@@ -33,7 +33,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 		})
 
 		// TODO: Custom message template
-		this.timer.registerEventHandler("elapsed", () => {
+		this.timer.on(["elapsed"], () => {
 			notify(
 				this.settings.systemNotificationsPreferred,
 				`Time has elapsed`,
@@ -44,12 +44,13 @@ export default class BetterPomodoroPlugin extends Plugin {
 
 		this.addSettingTab(new BetterPomodoroSettingsTab(this.app, this))
 
-		this.registerView(PLUGIN_CUSTOM_VIEW_ID, (leaf) => {
-			return new CustomView(leaf, this.timer, this.settings)
+		this.registerView(CUSTOM_VIEW_ID, (leaf) => {
+			return new CustomView(leaf, this.timer, this.settings.CvColors)
 		})
 
-		this.statusBar = new StatusBar(
-			this.addStatusBarItem(),
+		this.statusBarItem = this.addStatusBarItem()
+		buildStatusBarItem(
+			this.statusBarItem,
 			this.timer,
 			this.settings.showStatusBar,
 		)
@@ -58,12 +59,19 @@ export default class BetterPomodoroPlugin extends Plugin {
 
 		this.registerCommands()
 
-		this.app.workspace.on("quit", () => {
-			this.saveTimerSession(this.timer.recoverableState)
-		})
+		// State preservation
+
+		let saveSessionCb = () => {
+			this.preserveString(
+				SAVED_SESSION_KEY,
+				JSON.stringify(this.timer.recoverableState),
+			)
+		}
+
+		this.timer.on(["tick", "reset", "toggle"], saveSessionCb)
 	}
 
-	private registerCommands() {
+	private registerCommands(): void {
 		this.addCommand({
 			id: "toggle",
 			name: "Toggle",
@@ -89,36 +97,51 @@ export default class BetterPomodoroPlugin extends Plugin {
 		})
 	}
 
-	unload() { }
-
-	private async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<PluginSettings>,
-		)
+	reflectSettingsChange(cb: (ctx: BetterPomodoroPlugin) => void) {
+		cb(this)
 	}
 
-	showCustomView() {
+	interactWithStatusBar(cb: (statusBarElement: HTMLElement) => void): void {
+		// It is easier to simply use a saved reference to the element in this case
+		cb(this.statusBarItem)
+	}
+
+	interactWithCustomView(cb: (view: CustomView) => void) {
+		this.app.workspace.getLeavesOfType(CUSTOM_VIEW_ID).forEach((leaf) => {
+			if (leaf.view instanceof CustomView) {
+				cb(leaf.view)
+			}
+		})
+	}
+
+	private async loadSettings() {
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...((await this.loadData()) as Partial<PluginSettings>),
+		}
+	}
+
+	async showCustomView() {
 		var { workspace } = this.app
-		var leaves = workspace.getLeavesOfType(PLUGIN_CUSTOM_VIEW_ID)
-		if (!leaves.length) {
-			var leaf = workspace.getRightLeaf(false)
-			void leaf?.setViewState({
-				type: PLUGIN_CUSTOM_VIEW_ID,
+
+		var leaf: WorkspaceLeaf | null
+		var leaves = workspace.getLeavesOfType(CUSTOM_VIEW_ID)
+		if (leaves.length > 0) {
+			leaf = leaves[0]!
+		} else {
+			leaf = workspace.getRightLeaf(false)!
+			await leaf.setViewState({
+				type: CUSTOM_VIEW_ID,
 				active: true,
 			})
 		}
+		workspace.revealLeaf(leaf)
 	}
 
 	hideCustomView() {
 		var { workspace } = this.app
 		// Detaches all leaves in case more than one was created (by mistake)
-		workspace.detachLeavesOfType(PLUGIN_CUSTOM_VIEW_ID)
-	}
-
-	reflectSettingsChange(cb: (ctx: BetterPomodoroPlugin) => void) {
-		cb(this)
+		workspace.detachLeavesOfType(CUSTOM_VIEW_ID)
 	}
 
 	async saveSettings() {
@@ -126,7 +149,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 	}
 
 	/* eslint-disable */
-	recoverLastSession(): recoverableTimerState | undefined {
+	private recoverLastSession(): recoverableTimerState | undefined {
 		let res = this.retrieveStored(SAVED_SESSION_KEY)
 		if (res) {
 			return JSON.parse(res)
@@ -141,12 +164,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 	}
 	/* eslint-enable */
 
-	saveTimerSession(s: recoverableTimerState): void {
-		console.log("save session")
-		this.saveArbitrary(SAVED_SESSION_KEY, JSON.stringify(s))
-	}
-
-	private saveArbitrary(k: string, s: string): void {
+	private preserveString(k: string, s: string): void {
 		this.app.saveLocalStorage(k, s)
 	}
 
@@ -157,4 +175,6 @@ export default class BetterPomodoroPlugin extends Plugin {
 		}
 		return ""
 	}
+
+	onunload() { }
 }

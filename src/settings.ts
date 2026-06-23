@@ -1,6 +1,8 @@
-import { type App, type HexString, PluginSettingTab, Setting } from "obsidian"
+import { type App, PluginSettingTab, Setting } from "obsidian"
 import type BetterPomodoroPlugin from "./main"
 import { playSound } from "./sound"
+import { CvColors } from "custom-view"
+import { alterVisibility } from "./utils"
 
 export type PluginSettings = {
 	workSecs: number
@@ -9,7 +11,7 @@ export type PluginSettings = {
 	continueAfterTimeHasElapsed: boolean
 	showStatusBar: boolean
 	showCustomView: boolean
-	customViewColors: { remaining: HexString; elapsed: HexString }
+	CvColors: CvColors
 	playNotificationSound: boolean
 	customNotificationSound: string
 }
@@ -21,7 +23,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	continueAfterTimeHasElapsed: true,
 	showCustomView: false,
 	showStatusBar: true,
-	customViewColors: { remaining: "#ff1700", elapsed: "#06ff00" },
+	CvColors: { remaining: "#ff1700", elapsed: "#06ff00" },
 	playNotificationSound: true,
 	customNotificationSound: "",
 }
@@ -51,7 +53,9 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							ctx.statusBar.alterVisibility(val)
+							ctx.interactWithStatusBar((el) => {
+								alterVisibility(el, val)
+							})
 						})
 					})
 			})
@@ -84,16 +88,18 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName("Color for remaining time")
 			.addColorPicker((component) => {
 				component
-					.setValue(this.plugin.settings.customViewColors.remaining)
+					.setValue(this.plugin.settings.CvColors.remaining)
 					.setDisabled(!this.plugin.settings.showCustomView)
 					.onChange(async (newColor: string) => {
-						this.plugin.settings.customViewColors.remaining =
-							newColor
+						this.plugin.settings.CvColors.remaining = newColor
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							ctx.hideCustomView()
-							ctx.showCustomView()
+							ctx.interactWithCustomView((view) =>
+								view.setRemainingCircleColor(
+									this.plugin.settings.CvColors.remaining,
+								),
+							)
 						})
 					})
 			})
@@ -102,15 +108,18 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName("Color for elapsed time")
 			.addColorPicker((component) => {
 				component
-					.setValue(this.plugin.settings.customViewColors.elapsed)
+					.setValue(this.plugin.settings.CvColors.elapsed)
 					.setDisabled(!this.plugin.settings.showCustomView)
 					.onChange(async (newColor: string) => {
-						this.plugin.settings.customViewColors.elapsed = newColor
+						this.plugin.settings.CvColors.elapsed = newColor
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							ctx.hideCustomView()
-							ctx.showCustomView()
+							ctx.interactWithCustomView((view) =>
+								view.setElapsedCircleColor(
+									this.plugin.settings.CvColors.elapsed,
+								),
+							)
 						})
 					})
 			})
@@ -122,17 +131,23 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 					.setButtonText("Reset")
 					.setDisabled(!this.plugin.settings.showCustomView)
 					.onClick(async () => {
-						this.plugin.settings.customViewColors.elapsed =
-							DEFAULT_SETTINGS.customViewColors.elapsed
+						this.plugin.settings.CvColors.elapsed =
+							DEFAULT_SETTINGS.CvColors.elapsed
 
-						this.plugin.settings.customViewColors.remaining =
-							DEFAULT_SETTINGS.customViewColors.remaining
+						this.plugin.settings.CvColors.remaining =
+							DEFAULT_SETTINGS.CvColors.remaining
 
 						await this.plugin.saveSettings()
 
 						this.plugin.reflectSettingsChange((ctx) => {
-							ctx.hideCustomView()
-							ctx.showCustomView()
+							ctx.interactWithCustomView((view) => {
+								view.setRemainingCircleColor(
+									this.plugin.settings.CvColors.remaining,
+								)
+								view.setElapsedCircleColor(
+									this.plugin.settings.CvColors.elapsed,
+								)
+							})
 						})
 
 						this.display()

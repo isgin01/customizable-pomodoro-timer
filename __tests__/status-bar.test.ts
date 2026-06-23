@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS } from "../src/settings"
-import StatusBar from "../src/status-bar"
+import buildStatusBarElement from "../src/status-bar"
 import { Timer } from "../src/timer"
 
 class FakeStatusBar extends HTMLElement {
@@ -20,7 +20,7 @@ it("initialization", () => {
 
 	var timer = new Timer(settings)
 	var element = new FakeStatusBar()
-	new StatusBar(element, timer, true)
+	buildStatusBarElement(element, timer, true)
 
 	expect(element.innerHTML).toBe("")
 	expect(element.innerText).toBe("00:40:00")
@@ -44,7 +44,7 @@ it("clicks", () => {
 	var timer = new Timer(settings)
 	var element = new FakeStatusBar()
 
-	new StatusBar(element, timer, true)
+	buildStatusBarElement(element, timer, true)
 
 	expect(element.className).toContain("mod-clickable")
 

@@ -1,19 +1,19 @@
-import { ItemView, type WorkspaceLeaf, setIcon } from "obsidian"
-import { type PluginSettings } from "./settings"
+import { ItemView, type WorkspaceLeaf, setIcon, type HexString } from "obsidian"
 import { type Timer } from "./timer"
 
 // TODO: does it have to be unique across all plugins?
-export const PLUGIN_CUSTOM_VIEW_ID = "isgin-pomodoro-timer-view"
+export const CUSTOM_VIEW_ID = "isgin-pomodoro-timer-view"
+
+export type CvColors = { remaining: HexString; elapsed: HexString }
 
 export class CustomView extends ItemView {
 	private toggleBtn: HTMLButtonElement
-
 	private elapsedTimeCircle: SVGCircleElement
 
 	constructor(
 		leaf: WorkspaceLeaf,
 		private timer: Timer,
-		private settings: PluginSettings,
+		colors: CvColors,
 	) {
 		super(leaf)
 		this.containerEl.empty()
@@ -33,28 +33,37 @@ export class CustomView extends ItemView {
 				cls: "animation-container",
 			})
 			.createSvg("svg")
-		let remainingTimeCircle = svg.createSvg("circle", {
-			attr: { cx: 70, cy: 70, r: 70, "stroke-width": 2 },
+		svg.createSvg("circle", {
+			attr: {
+				class: "remaining",
+				cx: 70,
+				cy: 70,
+				r: 70,
+				"stroke-width": 2,
+			},
 		})
-		remainingTimeCircle.style.fill =
-			this.settings.customViewColors.remaining
+		this.setRemainingCircleColor(colors.remaining)
 
 		this.elapsedTimeCircle = svg.createSvg("circle", {
-			attr: { id: "elapsed", cx: 70, cy: 70, r: 60, "stroke-width": 20 },
+			attr: {
+				class: "elapsed",
+				cx: 70,
+				cy: 70,
+				r: 60,
+				"stroke-width": 20,
+			},
 		})
 		this.setElapsedCircleReach()
+		this.setElapsedCircleColor(colors.elapsed)
 		svg.createSvg("circle", {
-			attr: { id: "bg", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
+			attr: { class: "bg", cx: 70, cy: 70, r: 60, "stroke-width": 8 },
 		})
-
-		this.elapsedTimeCircle.style.stroke =
-			this.settings.customViewColors.elapsed
 
 		// TODO: work/break text
 
 		var timeContainer = container.createSpan({ cls: "time-container" })
 		timeContainer.innerText = timer.HFTime
-		this.timer.registerEventHandler("tick", (HFTime: string) => {
+		this.timer.on(["tick", "reset"], (HFTime: string) => {
 			timeContainer.innerText = HFTime
 			this.setElapsedCircleReach()
 		})
@@ -73,7 +82,7 @@ export class CustomView extends ItemView {
 		this.toggleBtn.addEventListener("click", () => {
 			this.timer.toggle()
 		})
-		this.timer.registerEventHandler("toggle", () => {
+		this.timer.on(["toggle", "reset"], () => {
 			this.setToggleBtnIcon()
 		})
 
@@ -106,8 +115,28 @@ export class CustomView extends ItemView {
 		)
 	}
 
+	setRemainingCircleColor(color: HexString) {
+		let el = this.containerEl.getElementsByClassName("remaining")[0] as
+			| SVGCircleElement
+			| undefined
+
+		if (el) {
+			el.style.fill = color
+		}
+	}
+
+	setElapsedCircleColor(color: HexString) {
+		let el = this.containerEl.getElementsByClassName("elapsed")[0] as
+			| SVGCircleElement
+			| undefined
+
+		if (el) {
+			el.style.stroke = color
+		}
+	}
+
 	getViewType() {
-		return PLUGIN_CUSTOM_VIEW_ID
+		return CUSTOM_VIEW_ID
 	}
 
 	getDisplayText() {

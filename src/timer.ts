@@ -1,6 +1,8 @@
 import { type PluginSettings } from "settings"
 
-type Event = "tick" | "elapsed" | "toggle"
+// Switch is missing because 'toggle' is sufficient
+// Whenever 'switch' would be triggered, 'reset' would be too
+export type Event = "tick" | "elapsed" | "toggle" | "reset"
 type Callback = (HFTime?: string) => void
 
 type Mode = "work" | "break"
@@ -22,6 +24,7 @@ export class Timer {
 		tick: [],
 		elapsed: [],
 		toggle: [],
+		reset: [],
 	}
 	private intervalId: number | undefined
 
@@ -55,8 +58,8 @@ export class Timer {
 		this.remaining = this.unmodified
 	}
 
-	registerEventHandler(event: Event, cb: Callback): void {
-		this.eventHandlers[event].push(cb)
+	on(events: Event[], cb: Callback): void {
+		events.forEach((ev: Event) => this.eventHandlers[ev].push(cb))
 	}
 
 	toggle(): void {
@@ -72,27 +75,28 @@ export class Timer {
 	private start(): void {
 		this.running = true
 
-		const oneSecondMillis = 1000
-
 		// Use window.setInterval explicitly to avoid TS confusing
 		// between NodeJS and Browser API
 		this.intervalId = window.setInterval(() => {
 			this.tick()
-		}, oneSecondMillis)
+			this.elapsed()
+		}, 1000)
 	}
 
 	private stop(): void {
 		this.running = false
-
 		window.clearInterval(this.intervalId)
 	}
 
 	private tick(): void {
 		this.remaining--
 		this.runEventHandlers("tick")
+	}
+
+	// TODO: refactor
+	private elapsed(): void {
 		if (this.remaining == 0) {
 			this.runEventHandlers("elapsed")
-
 			if (!this.settings.continueAfterTimeHasElapsed) {
 				this.switch()
 			}
@@ -107,8 +111,7 @@ export class Timer {
 	reset(): void {
 		this.stop()
 		this.resetSecs()
-		this.runEventHandlers("tick")
-		this.runEventHandlers("toggle")
+		this.runEventHandlers("reset")
 	}
 
 	private runEventHandlers(ev: Event) {
