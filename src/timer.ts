@@ -1,5 +1,3 @@
-import { type PluginSettings } from 'settings'
-
 // 'Switch' is missing because 'toggle' is sufficient
 // Whenever 'switch' would be triggered, 'reset' would be too
 export type Event = 'tick' | 'elapsed' | 'toggle' | 'reset'
@@ -17,6 +15,11 @@ export type recoverableTimerState = {
 	remaining: number
 }
 
+export type Params = {
+	autostart: boolean
+	stopWhenElapsed: boolean
+}
+
 export class Timer {
 	running: boolean
 	// TODO: remove unmodified because mode is sufficient now
@@ -24,7 +27,6 @@ export class Timer {
 	remaining: number
 
 	private currentModeIdx: number
-	private modes: Mode[]
 	private eventHandlers: { [key in Event]: Callback[] } = {
 		tick: [],
 		elapsed: [],
@@ -34,12 +36,11 @@ export class Timer {
 	private intervalId: number | undefined
 
 	constructor(
-		private readonly settings: PluginSettings,
-		modes: Mode[],
-		initialState?: recoverableTimerState,
+		private modes: Mode[],
+		private readonly params: Params,
+		readonly initialState?: recoverableTimerState,
 	) {
-		// TODO: Remove settings from this class altogether
-		this.settings = settings
+		this.params = params
 		this.modes = modes
 
 		// TODO: handle situations when no modes list was supplied
@@ -125,11 +126,11 @@ export class Timer {
 	private isElapsed(): void {
 		if (this.remaining === 0) {
 			this.runEventHandlers('elapsed')
-			if (!this.settings.continueAfterTimeHasElapsed) {
+			if (!this.params.stopWhenElapsed) {
 				this.nextMode()
 			}
 
-			if (this.settings.autostart) {
+			if (this.params.autostart) {
 				this.toggle()
 			}
 		}

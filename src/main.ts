@@ -23,8 +23,8 @@ export default class BetterPomodoroPlugin extends Plugin {
 		// Timer
 
 		this.timer = new Timer(
-			this.settings,
 			this.settings.modes,
+			this.settings,
 			this.recoverLastSession(),
 		)
 
@@ -39,7 +39,7 @@ export default class BetterPomodoroPlugin extends Plugin {
 		// TODO: Custom message template
 		this.timer.on(['elapsed'], () => {
 			notify(
-				this.settings.systemNotificationsPreferred,
+				this.settings.systemNotificationPreferred,
 				`Time has elapsed`,
 			)
 		})

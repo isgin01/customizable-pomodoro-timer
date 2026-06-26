@@ -7,8 +7,8 @@ import { Mode } from './timer'
 
 export type PluginSettings = {
 	modes: Mode[]
-	systemNotificationsPreferred: boolean
-	continueAfterTimeHasElapsed: boolean
+	systemNotificationPreferred: boolean
+	stopWhenElapsed: boolean
 	autostart: boolean
 	showStatusBar: boolean
 	showCustomView: boolean
@@ -32,9 +32,9 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 			{ name: 'long', secs: 20 * 60 },
 		]
 	},
-	systemNotificationsPreferred: false,
+	systemNotificationPreferred: false,
 	autostart: false,
-	continueAfterTimeHasElapsed: true,
+	stopWhenElapsed: true,
 	showCustomView: false,
 	showStatusBar: true,
 	CvColors: { remaining: '#ff1700', elapsed: '#06ff00' },
@@ -180,10 +180,10 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName('Continue running after time has elapsed')
 			.addToggle(component => {
 				component
-					.setValue(this.settings.continueAfterTimeHasElapsed)
+					.setValue(this.settings.stopWhenElapsed)
 					.setDisabled(this.settings.autostart)
 					.onChange((newValue: boolean) => {
-						this.settings.continueAfterTimeHasElapsed = newValue
+						this.settings.stopWhenElapsed = newValue
 						void this.plugin.saveSettings()
 						this.display()
 					})
@@ -194,7 +194,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.addToggle(component => {
 				component
 					.setValue(this.settings.autostart)
-					.setDisabled(this.settings.continueAfterTimeHasElapsed)
+					.setDisabled(this.settings.stopWhenElapsed)
 					.onChange((value: boolean) => {
 						this.settings.autostart = value
 						void this.plugin.saveSettings()
@@ -208,9 +208,9 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName('Prefer system notification')
 			.addToggle(component => {
 				component
-					.setValue(this.settings.systemNotificationsPreferred)
+					.setValue(this.settings.systemNotificationPreferred)
 					.onChange(async (newValue: boolean) => {
-						this.settings.systemNotificationsPreferred = newValue
+						this.settings.systemNotificationPreferred = newValue
 						await this.plugin.saveSettings()
 					})
 			})
@@ -219,9 +219,9 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName('Play notification sound')
 			.addToggle(component => {
 				component
-					.setValue(this.settings.systemNotificationsPreferred)
+					.setValue(this.settings.systemNotificationPreferred)
 					.onChange(async (newValue: boolean) => {
-						this.settings.systemNotificationsPreferred = newValue
+						this.settings.systemNotificationPreferred = newValue
 						await this.plugin.saveSettings()
 					})
 			})
@@ -288,7 +288,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						this.display()
 					} else {
 						notify(
-							this.settings.systemNotificationsPreferred,
+							this.settings.systemNotificationPreferred,
 							'Malformed input; unsaved',
 						)
 					}

@@ -17,7 +17,7 @@ window.customElements.define('fake-status-bar', FakeStatusBar)
 var settings = { ...DEFAULT_SETTINGS }
 
 it('initialization', () => {
-	var timer = new Timer(settings, settings.modes)
+	var timer = new Timer(settings.modes, settings)
 	var element = new FakeStatusBar()
 	buildStatusBarElement(element, timer, true)
 
@@ -37,7 +37,7 @@ it('initialization', () => {
 })
 
 it('clicks', () => {
-	var timer = new Timer(settings, settings.modes)
+	var timer = new Timer(settings.modes, settings)
 	var element = new FakeStatusBar()
 
 	buildStatusBarElement(element, timer, true)

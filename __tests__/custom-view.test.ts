@@ -4,7 +4,7 @@ import { Timer } from '../src/timer'
 import { DEFAULT_SETTINGS } from '../src/settings'
 
 test('init', () => {
-	var timer = new Timer(DEFAULT_SETTINGS, DEFAULT_SETTINGS.modes)
+	var timer = new Timer(DEFAULT_SETTINGS.modes, DEFAULT_SETTINGS)
 	var v = new CustomView(
 		{} as WorkspaceLeaf,
 		timer,

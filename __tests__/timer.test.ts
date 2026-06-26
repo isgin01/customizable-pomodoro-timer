@@ -1,8 +1,8 @@
 import {
+	Params,
 	recoverableTimerState as RecoverableTimerState,
 	Timer,
 } from '../src/timer'
-import { PluginSettings } from '../src/settings'
 
 jest.useFakeTimers()
 
@@ -17,29 +17,20 @@ var standardModes = [
 	},
 ]
 
-function getSettingsHelper(
-	paramsNecessaryToRunSuccessfully?: Partial<PluginSettings>,
-): PluginSettings {
-	let empty_settings: PluginSettings = {
-		modes: new Array(),
-		systemNotificationsPreferred: false,
-		continueAfterTimeHasElapsed: false,
-		showCustomView: false,
-		showStatusBar: false,
-		CvColors: { remaining: '', elapsed: '' },
-		playNotificationSound: false,
-		customNotificationSound: '',
+function getParameters(propsNeededToRunSuccessfully?: Partial<Params>): Params {
+	let empty_settings: Params = {
+		stopWhenElapsed: false,
 		autostart: false,
 	}
 
 	return {
 		...empty_settings,
-		...paramsNecessaryToRunSuccessfully,
+		...propsNeededToRunSuccessfully,
 	}
 }
 
 test('toggle', () => {
-	var timer = new Timer(getSettingsHelper(), standardModes)
+	var timer = new Timer(standardModes, getParameters())
 	expect(timer.running).toBe(false)
 	timer.toggle()
 	expect(timer.running).toBe(true)
@@ -48,7 +39,7 @@ test('toggle', () => {
 })
 
 test('switch', () => {
-	var timer = new Timer(getSettingsHelper(), standardModes)
+	var timer = new Timer(standardModes, getParameters())
 
 	expect(timer.HFTime).toBe('01:00:00')
 	expect(timer.currentMode.name).toBe('work')
@@ -59,10 +50,10 @@ test('switch', () => {
 
 test('event handler func called correct amount of times', () => {
 	var timer = new Timer(
-		getSettingsHelper({
-			continueAfterTimeHasElapsed: true,
-		}),
 		standardModes,
+		getParameters({
+			stopWhenElapsed: true,
+		}),
 	)
 
 	let cb = jest.fn()
@@ -85,15 +76,15 @@ test('event handler func called correct amount of times', () => {
 
 test('HF time display', () => {
 	var timer = new Timer(
-		getSettingsHelper({
-			continueAfterTimeHasElapsed: true,
-		}),
 		[
 			{
 				name: 'work',
 				secs: 60 * 60 * 24,
 			},
 		],
+		getParameters({
+			stopWhenElapsed: true,
+		}),
 	)
 
 	expect(timer.HFTime).toBe('24:00:00')
@@ -131,11 +122,7 @@ describe('create an instance of Timer from initial state', () => {
 	}
 
 	test('initialization', () => {
-		var timer = new Timer(
-			getSettingsHelper(),
-			standardModes,
-			recoverableState,
-		)
+		var timer = new Timer(standardModes, getParameters(), recoverableState)
 		expect(timer.currentMode.name).toBe('break')
 		expect(timer.unmodified).toBe(10)
 		expect(timer.remaining).toBe(5)
@@ -144,11 +131,7 @@ describe('create an instance of Timer from initial state', () => {
 
 	test('running: true', () => {
 		recoverableState.running = true
-		var timer = new Timer(
-			getSettingsHelper(),
-			standardModes,
-			recoverableState,
-		)
+		var timer = new Timer(standardModes, getParameters(), recoverableState)
 
 		let testCb = jest.fn()
 		timer.on(['tick'], testCb)
@@ -163,11 +146,7 @@ describe('create an instance of Timer from initial state', () => {
 
 	test('running: false', () => {
 		recoverableState.running = false
-		var timer = new Timer(
-			getSettingsHelper(),
-			standardModes,
-			recoverableState,
-		)
+		var timer = new Timer(standardModes, getParameters(), recoverableState)
 		jest.advanceTimersByTime(1000)
 		expect(timer.remaining).toBe(5)
 	})
@@ -175,13 +154,13 @@ describe('create an instance of Timer from initial state', () => {
 
 test('recoverable session state obtaining', () => {
 	var timer = new Timer(
-		getSettingsHelper({
-			continueAfterTimeHasElapsed: true,
-		}),
 		[
 			{ name: 'work', secs: 60 },
 			{ name: 'break', secs: 60 },
 		],
+		getParameters({
+			stopWhenElapsed: true,
+		}),
 	)
 
 	expect(timer.recoverableState).toStrictEqual<RecoverableTimerState>({
@@ -232,7 +211,7 @@ test('recoverable session state obtaining', () => {
 })
 
 test('autostart', () => {
-	var timer = new Timer(getSettingsHelper({ autostart: true }), standardModes)
+	var timer = new Timer(standardModes, getParameters({ autostart: true }))
 
 	expect(timer.currentMode.name).toBe('work')
 	timer.toggle()
