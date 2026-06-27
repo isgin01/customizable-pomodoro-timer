@@ -37,7 +37,7 @@ export default class PomodoroPlugin extends Plugin {
 			// Settings can get changed during the timer run,
 			// so it's important to check
 			if (this.settings.playNotificationSound) {
-				playSound(this.getFile(this.settings.customNotificationSound))
+				playSound(this.getFile(this.settings.notificationSoundPath))
 			}
 		})
 

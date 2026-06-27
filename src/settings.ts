@@ -14,7 +14,7 @@ export type PluginSettings = {
 	showCustomView: boolean
 	CvColors: CvColors
 	playNotificationSound: boolean
-	customNotificationSound: string
+	notificationSoundPath: string
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	showStatusBar: true,
 	CvColors: { remaining: '#ff1700', elapsed: '#06ff00' },
 	playNotificationSound: true,
-	customNotificationSound: '',
+	notificationSoundPath: '',
 }
 
 export class PomodoroSettingsTab extends PluginSettingTab {
@@ -218,7 +218,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 			.addButton(component => {
 				component.setButtonText('Check audio').onClick(() => {
 					var sound = this.plugin.getFile(
-						this.settings.customNotificationSound,
+						this.settings.notificationSoundPath,
 					)
 
 					// avoid playing the default sound
@@ -229,10 +229,12 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 			})
 			.addText(component => {
 				component
-					.setPlaceholder('Path')
-					.setValue(this.settings.customNotificationSound)
-					.onChange(async s => {
-						this.settings.customNotificationSound = s.trim()
+					.setValue(this.settings.notificationSoundPath)
+					.setPlaceholder('sound.wav')
+					.onChange(async path => {
+						path = path.trim()
+						path = path.slice(0, 2) == './' ? path.slice(2) : path
+						this.settings.notificationSoundPath = path
 						await this.plugin.saveSettings()
 					})
 			})
