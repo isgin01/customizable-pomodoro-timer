@@ -1,7 +1,7 @@
 import { ItemView, type WorkspaceLeaf, setIcon, type HexString } from 'obsidian'
 import { type Timer } from './timer'
 
-export const CUSTOM_VIEW_ID = 'isgin-pomodoro-timer-view'
+export const CUSTOM_VIEW_ID = 'customizable-pomodoro-timer-view'
 
 export type CvColors = { remaining: HexString; elapsed: HexString }
 

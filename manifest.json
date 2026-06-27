@@ -1,11 +1,10 @@
 {
-	"id": "isgin-pomodoro-timer",
-	"name": "Pomodoro Timer",
+	"id": "customizable-pomodoro-timer",
+	"name": "Customizable Pomodoro Timer",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "A pomodoro timer",
+	"description": "A pomodoro timer with customization features. Can be used as a statusbar, separate view, or from the command line. Allows to change colors, timer modes and their duration, notification sounds, etc.",
 	"author": "isgin01",
 	"authorUrl": "https://github.com/isgin01",
-	"fundingUrl": "",
 	"isDesktopOnly": false
 }

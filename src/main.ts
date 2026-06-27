@@ -10,7 +10,7 @@ import buildStatusBarItem from './status-bar'
 import { notify } from './utils'
 import { playSound } from './sound'
 
-const SAVED_SESSION_KEY = 'isgin-timer-saved-session'
+const SAVED_SESSION_KEY = 'customizable-pomodoro-saved-session'
 
 export default class PomodoroPlugin extends Plugin {
 	settings: PluginSettings
@@ -37,6 +37,7 @@ export default class PomodoroPlugin extends Plugin {
 			// Settings can get changed during the timer run,
 			// so it's important to check
 			if (this.settings.playNotificationSound) {
+				console.log('playing')
 				playSound(this.getFile(this.settings.notificationSoundPath))
 			}
 		})
@@ -56,10 +57,16 @@ export default class PomodoroPlugin extends Plugin {
 			this.settings.showStatusBar,
 		)
 
-		this.addRibbonIcon('timer', 'Show Pomodoro Timer', () => {
-			this.settings.showCustomView = true
-			this.saveSettings()
-			this.showCustomView()
+		this.addRibbonIcon('timer', 'Toggle timer view', () => {
+			if (this.settings.showCustomView) {
+				this.settings.showCustomView = false
+				this.saveSettings()
+				this.hideCustomView()
+			} else {
+				this.settings.showCustomView = true
+				this.saveSettings()
+				this.showCustomView()
+			}
 		})
 
 		// Commands
