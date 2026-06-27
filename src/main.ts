@@ -164,7 +164,7 @@ export default class PomodoroPlugin extends Plugin {
 		this.app.saveLocalStorage(k, s)
 	}
 
-	getFile(path: string) {
+	getFile(path: string): string {
 		var aFile = this.app.vault.getAbstractFileByPath(path)
 		if (aFile instanceof TFile) {
 			return this.app.vault.getResourcePath(aFile)

@@ -49,6 +49,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 	constructor(app: App, plugin: PomodoroPlugin) {
 		super(app, plugin)
 		this.plugin = plugin
+		// Save reference to settings for brevity
 		this.settings = plugin.settings
 	}
 
@@ -231,7 +232,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 					.setPlaceholder('Path')
 					.setValue(this.settings.customNotificationSound)
 					.onChange(async s => {
-						this.settings.customNotificationSound = s
+						this.settings.customNotificationSound = s.trim()
 						await this.plugin.saveSettings()
 					})
 			})
@@ -253,19 +254,21 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 			})
 			.addButton(component => {
 				component.setButtonText('Save').onClick(() => {
-					let modeNames = tempValue
+					let splitVals = tempValue
 						.split(',')
 						.map(s => s.trim().toLowerCase())
 						.filter(v => v.length > 0)
 
-					if (modeNames.length > 0) {
-						this.settings.modes = modeNames.map(s => {
-							let duration = this.settings.modes.find(
-								m => m.name === s,
+					if (splitVals.length > 0) {
+						// Set the new value to settings while taking into account
+						// the already existing values
+						this.settings.modes = splitVals.map(s => {
+							let existing = this.settings.modes.find(
+								m => m.name.toLowerCase() === s,
 							)
 							return {
 								name: s,
-								secs: duration ? duration.secs : 0,
+								secs: existing ? existing.secs : 0,
 							}
 						})
 						this.plugin.saveSettings()
@@ -303,7 +306,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 								if (minutes) {
 									let secs = minutes * 60
 
-									// Find each mode with this name and change its seconds count
+									// Find modes with such name and change their seconds count
 									this.settings.modes.map(m2 => {
 										return m2.name == m1.name
 											? (m2.secs = secs)
@@ -314,6 +317,12 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 									this.plugin.timer.setModes(
 										this.settings.modes,
 									)
+								} else {
+									notify(
+										this.settings
+											.systemNotificationPreferred,
+										'Malformed input; unsaved',
+									)
 								}
 							})
 					})
@@ -322,7 +331,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Reset mode settings')
 			.setDesc(
-				`Be careful because using this button would reset all your preferences related
+				`Note that using this button would reset all your preferences related
 				to modes to default values`,
 			)
 			.addButton(component => {
