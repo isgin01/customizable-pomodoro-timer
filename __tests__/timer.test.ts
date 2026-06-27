@@ -239,3 +239,62 @@ test('recoverable session state obtaining', () => {
 	jest.advanceTimersByTime(1000 * 5)
 	expect(timer.remaining).toBe(55)
 })
+
+// A big ugly test.
+test('the entire workflow', () => {
+	let initialState = {
+		running: false,
+		modeIdx: 1,
+		unmodified: 10,
+		remaining: 10,
+	}
+
+	var timer = new Timer(
+		[work, _break, work, _break, longBreak],
+		getParameters(),
+		initialState,
+	)
+
+	expect(timer.currentMode.name).toBe('break')
+	timer.resetProgress()
+	expect(timer.currentMode.name).toBe('work')
+
+	var testCb = jest.fn()
+	timer.on(['tick', 'elapsed', 'toggle', 'reset'], testCb)
+
+	expect(timer.running).toBe(false)
+	expect(timer.currentMode.name).toBe('work')
+	timer.toggle()
+	jest.advanceTimersByTime(1000 * 60)
+	expect(timer.currentMode.name).toBe('break')
+	expect(timer.running).toBe(false)
+	timer.toggle()
+	expect(timer.running).toBe(true)
+	jest.advanceTimersByTime(1000 * 60)
+	expect(timer.currentMode.name).toBe('work')
+	expect(timer.running).toBe(false)
+	timer.toggle()
+	jest.advanceTimersByTime(1000 * 60)
+	timer.toggle()
+	jest.advanceTimersByTime(1000 * 10)
+	timer.toggle()
+	expect(timer.running).toBe(true)
+	expect(timer.currentMode.name).toBe('long')
+	jest.advanceTimersByTime(1000 * 30)
+	expect(timer.currentMode.name).toBe('work')
+	timer.toggle()
+	jest.advanceTimersByTime(1000 * 60)
+	expect(timer.currentMode.name).toBe('break')
+	timer.toggle()
+	jest.advanceTimersByTime(1000 * 5)
+	expect(timer.currentMode.name).toBe('break')
+	expect(timer.remaining).toBe(5)
+	timer.reset()
+	expect(timer.currentMode.name).toBe('break')
+	expect(timer.remaining).toBe(10)
+	timer.switch()
+	expect(timer.currentMode.name).toBe('work')
+	timer.resetProgress()
+	expect(timer.currentMode.name).toBe('work')
+	expect(testCb).toHaveBeenCalledTimes(257)
+})
