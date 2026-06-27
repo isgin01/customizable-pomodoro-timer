@@ -22,7 +22,7 @@ export default function StatusBarItem(
 		i.setTitle('Reset').onClick(() => timer.reset())
 	})
 	menu.addItem(i => {
-		i.setTitle('Switch').onClick(() => timer.nextMode())
+		i.setTitle('Switch').onClick(() => timer.switch())
 	})
 
 	element.addEventListener('auxclick', ev => {

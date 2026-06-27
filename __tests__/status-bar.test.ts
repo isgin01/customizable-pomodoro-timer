@@ -19,7 +19,7 @@ var timerModes = [
 ]
 
 var timerParams = {
-	stopWhenElapsed: false,
+	keepRunning: true,
 	autostart: false,
 }
 it('initialization', () => {

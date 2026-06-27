@@ -6,20 +6,15 @@ import {
 
 jest.useFakeTimers()
 
-var standardModes = [
-	{
-		name: 'work',
-		secs: 60 * 60,
-	},
-	{
-		name: 'break',
-		secs: 60 * 10,
-	},
-]
+var work = { name: 'work', secs: 60 }
+var _break = { name: 'break', secs: 10 }
+var longBreak = { name: 'long', secs: 30 }
+
+var standardModes = [work, _break, longBreak]
 
 function getParameters(propsNeededToRunSuccessfully?: Partial<Params>): Params {
 	let empty_settings: Params = {
-		stopWhenElapsed: true,
+		keepRunning: false,
 		autostart: false,
 	}
 
@@ -29,30 +24,113 @@ function getParameters(propsNeededToRunSuccessfully?: Partial<Params>): Params {
 	}
 }
 
-test('toggle', () => {
-	var timer = new Timer(standardModes, getParameters())
-	expect(timer.running).toBe(false)
-	timer.toggle()
-	expect(timer.running).toBe(true)
-	timer.toggle()
-	expect(timer.running).toBe(false)
-})
+describe('features', () => {
+	test('toggle', () => {
+		var timer = new Timer(standardModes, getParameters())
+		expect(timer.running).toBe(false)
+		expect(timer.remaining).toBe(60)
 
-test('switch', () => {
-	var timer = new Timer(standardModes, getParameters())
+		timer.toggle()
+		expect(timer.running).toBe(true)
+		jest.advanceTimersByTime(1000)
+		expect(timer.remaining).toBe(59)
 
-	expect(timer.HFTime).toBe('01:00:00')
-	expect(timer.currentMode.name).toBe('work')
-	timer.nextMode()
-	expect(timer.HFTime).toBe('00:10:00')
-	expect(timer.currentMode.name).toBe('break')
+		timer.toggle()
+		expect(timer.running).toBe(false)
+		jest.advanceTimersByTime(1000)
+		expect(timer.remaining).toBe(59)
+	})
+
+	test('reset time', () => {
+		var timer = new Timer([work], getParameters())
+
+		let testCb = jest.fn()
+		timer.on(['reset'], testCb)
+		expect(testCb).toHaveBeenCalledTimes(0)
+		timer.reset()
+		expect(testCb).toHaveBeenCalledTimes(1)
+
+		timer.toggle()
+		jest.advanceTimersByTime(1000 * 1)
+		expect(timer.remaining).toBe(work.secs - 1)
+
+		timer.reset()
+		expect(timer.remaining).toBe(work.secs)
+		expect(testCb).toHaveBeenCalledTimes(2)
+	})
+
+	test('switch', () => {
+		let modes = [work, _break, longBreak]
+		var timer = new Timer(modes, getParameters())
+		expect(timer.currentMode.name).toBe('work')
+		timer.switch()
+		expect(timer.currentMode.name).toBe('break')
+		timer.switch()
+		expect(timer.currentMode.name).toBe('long')
+		timer.switch()
+		expect(timer.currentMode.name).toBe('work')
+	})
+
+	test('reset progres', () => {
+		var timer = new Timer([work, _break, longBreak], getParameters())
+		expect(timer.currentMode.name).toBe('work')
+		timer.switch()
+		expect(timer.currentMode.name).toBe('break')
+		expect(timer.remaining).toBe(_break.secs)
+		timer.resetProgress()
+		expect(timer.currentMode.name).toBe('work')
+		expect(timer.remaining).toBe(work.secs)
+
+		// Check in case smb accidently makes them equal in the future
+		expect(work.secs).not.toBe(_break.secs)
+	})
+
+	test('stop when elapsed', () => {
+		var timer = new Timer(
+			[work, _break],
+			getParameters({ keepRunning: false }),
+		)
+		timer.toggle()
+		jest.advanceTimersByTime(1000 * work.secs + 10)
+		expect(timer.running).toBe(false)
+		expect(timer.currentMode.name).toBe('break')
+		expect(timer.remaining).toBe(10)
+	})
+
+	test('continue when elapsed', () => {
+		var timer = new Timer(
+			[work, _break],
+			getParameters({ keepRunning: true }),
+		)
+		timer.toggle()
+		jest.advanceTimersByTime(1000 * work.secs)
+		expect(timer.running).toBe(true)
+		expect(timer.currentMode.name).toBe('work')
+		expect(timer.remaining).toBe(0)
+		jest.advanceTimersByTime(1000)
+		expect(timer.remaining).toBe(-1)
+		jest.advanceTimersByTime(1000 * 3599)
+		expect(timer.remaining).toBe(-3600)
+	})
+
+	test('autostart', () => {
+		var timer = new Timer(standardModes, getParameters({ autostart: true }))
+		expect(timer.currentMode.name).toBe('work')
+		timer.toggle()
+		jest.advanceTimersByTime(1000 * 60)
+		expect(timer.currentMode.name).toBe('break')
+		expect(timer.running).toBe(true)
+		expect(timer.remaining).toBe(10)
+		jest.advanceTimersByTime(1000 * 10)
+		expect(timer.remaining).toBe(30)
+	})
 })
 
 test('event handler func called correct amount of times', () => {
 	var timer = new Timer(
 		standardModes,
 		getParameters({
-			stopWhenElapsed: false,
+			keepRunning: true,
 		}),
 	)
 
@@ -83,7 +161,7 @@ test('HF time display', () => {
 			},
 		],
 		getParameters({
-			stopWhenElapsed: false,
+			keepRunning: true,
 		}),
 	)
 
@@ -113,112 +191,51 @@ test('HF time display', () => {
 	expect(timer.HFTime).toBe('-11:01:00')
 })
 
-describe('create an instance of Timer from initial state', () => {
+describe('recover timer state from supplied initial state', () => {
 	var recoverableState: RecoverableTimerState = {
-		modeIdx: 1,
+		modeIdx: 0,
 		unmodified: 10,
-		remaining: 5,
-		running: true,
+		remaining: 10,
+		running: false,
 	}
 
-	test('initialization', () => {
+	test('init', () => {
 		var timer = new Timer(standardModes, getParameters(), recoverableState)
-		expect(timer.currentMode.name).toBe('break')
+		expect(timer.currentMode.name).toBe('work')
 		expect(timer.unmodified).toBe(10)
-		expect(timer.remaining).toBe(5)
-		expect(timer.running).toBe(true)
+		expect(timer.remaining).toBe(10)
+		expect(timer.running).toBe(false)
 	})
 
 	test('running: true', () => {
 		recoverableState.running = true
 		var timer = new Timer(standardModes, getParameters(), recoverableState)
-
-		let testCb = jest.fn()
-		timer.on(['tick'], testCb)
-		jest.advanceTimersByTime(1000)
-		expect(testCb).toHaveBeenCalledTimes(1)
-		expect(timer.remaining).toBe(4)
-
-		jest.advanceTimersByTime(1000)
-		expect(testCb).toHaveBeenCalledTimes(2)
-		expect(timer.remaining).toBe(3)
+		expect(timer.running).toBe(true)
+		expect(timer.remaining).toBe(10)
+		jest.advanceTimersByTime(1000 * 5)
+		expect(timer.remaining).toBe(5)
 	})
 
 	test('running: false', () => {
 		recoverableState.running = false
+		recoverableState.remaining = 5
 		var timer = new Timer(standardModes, getParameters(), recoverableState)
+		expect(timer.remaining).toBe(5)
 		jest.advanceTimersByTime(1000)
 		expect(timer.remaining).toBe(5)
 	})
 })
 
 test('recoverable session state obtaining', () => {
-	var timer = new Timer(
-		[
-			{ name: 'work', secs: 60 },
-			{ name: 'break', secs: 60 },
-		],
-		getParameters({
-			stopWhenElapsed: false,
-		}),
-	)
-
+	var timer = new Timer(standardModes, getParameters())
 	expect(timer.recoverableState).toStrictEqual<RecoverableTimerState>({
 		modeIdx: 0,
 		running: false,
 		unmodified: 60,
 		remaining: 60,
 	})
-
 	timer.toggle()
-
-	expect(timer.recoverableState).toStrictEqual<RecoverableTimerState>({
-		modeIdx: 0,
-		running: true,
-		unmodified: 60,
-		remaining: 60,
-	})
-
-	jest.advanceTimersByTime(1000)
-
-	expect(timer.recoverableState.remaining).toBe(59)
-
-	jest.advanceTimersByTime(1000 * 59)
-
-	expect(timer.recoverableState.remaining).toBe(0)
-
-	jest.advanceTimersByTime(1000 * 1)
-
-	expect(timer.recoverableState.remaining).toBe(-1)
-
-	timer.toggle()
-
-	expect(timer.recoverableState).toStrictEqual<RecoverableTimerState>({
-		modeIdx: 0,
-		running: false,
-		unmodified: 60,
-		remaining: -1,
-	})
-
-	timer.nextMode()
-
-	expect(timer.recoverableState).toStrictEqual<RecoverableTimerState>({
-		modeIdx: 1,
-		running: false,
-		unmodified: 60,
-		remaining: 60,
-	})
-})
-
-test('autostart', () => {
-	var timer = new Timer(standardModes, getParameters({ autostart: true }))
-
-	expect(timer.currentMode.name).toBe('work')
-	timer.toggle()
-	jest.advanceTimersByTime(1000 * 60 * 60)
-
-	expect(timer.currentMode.name).toBe('break')
 	expect(timer.running).toBe(true)
-	jest.advanceTimersByTime(1000 * 60 * 9)
-	expect(timer.remaining).toBe(60)
+	jest.advanceTimersByTime(1000 * 5)
+	expect(timer.remaining).toBe(55)
 })

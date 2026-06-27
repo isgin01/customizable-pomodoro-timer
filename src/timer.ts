@@ -17,7 +17,7 @@ export type recoverableTimerState = {
 
 export type Params = {
 	autostart: boolean
-	stopWhenElapsed: boolean
+	keepRunning: boolean
 }
 
 export class Timer {
@@ -43,7 +43,6 @@ export class Timer {
 		this.params = params
 		this.modes = modes
 
-		// TODO: handle situations when no modes list was supplied
 		if (
 			initialState &&
 			!Object.entries(initialState).some(v => v[1] == null) &&
@@ -126,8 +125,8 @@ export class Timer {
 	private isElapsed(): void {
 		if (this.remaining === 0) {
 			this.runEventHandlers('elapsed')
-			if (this.params.stopWhenElapsed) {
-				this.nextMode()
+			if (!this.params.keepRunning) {
+				this.switch()
 			}
 
 			if (this.params.autostart) {
@@ -136,7 +135,7 @@ export class Timer {
 		}
 	}
 
-	nextMode(): void {
+	switch(): void {
 		// WARNING: length may become zero if sth unexpected happens
 		// TODO: Fix
 		this.currentModeIdx = (this.currentModeIdx + 1) % this.modes.length
@@ -147,6 +146,11 @@ export class Timer {
 		this.stop()
 		this.resetSecs()
 		this.runEventHandlers('reset')
+	}
+
+	resetProgress(): void {
+		this.currentModeIdx = 0
+		this.reset()
 	}
 
 	private runEventHandlers(ev: Event) {

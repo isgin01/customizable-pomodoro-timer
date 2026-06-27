@@ -2,13 +2,13 @@ import { type App, PluginSettingTab, Setting } from 'obsidian'
 import type PomodoroPlugin from './main'
 import { playSound } from './sound'
 import { CvColors } from 'custom-view'
-import { alterVisibility, notify } from './utils'
+import { alterVisibility, notify, isProperNumber } from './utils'
 import { Mode } from './timer'
 
 export type PluginSettings = {
 	modes: Mode[]
 	systemNotificationPreferred: boolean
-	stopWhenElapsed: boolean
+	keepRunning: boolean
 	autostart: boolean
 	showStatusBar: boolean
 	showCustomView: boolean
@@ -18,8 +18,7 @@ export type PluginSettings = {
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-	// Use get to avoid the array from being used as
-	// a reference and overwritten as a result
+	// Use get to avoid the array from being used as a reference
 	get modes() {
 		return [
 			{ name: 'work', secs: 50 * 60 },
@@ -34,7 +33,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	},
 	systemNotificationPreferred: false,
 	autostart: false,
-	stopWhenElapsed: true,
+	keepRunning: true,
 	showCustomView: false,
 	showStatusBar: true,
 	CvColors: { remaining: '#ff1700', elapsed: '#06ff00' },
@@ -42,7 +41,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	customNotificationSound: '',
 }
 
-export class BetterPomodoroSettingsTab extends PluginSettingTab {
+export class PomodoroSettingsTab extends PluginSettingTab {
 	private plugin: PomodoroPlugin
 	private settings: PluginSettings
 
@@ -169,27 +168,25 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 			.setName('Continue running after time has elapsed')
 			.addToggle(component => {
 				component
-					.setValue(this.settings.stopWhenElapsed)
+					.setValue(this.settings.keepRunning)
 					.setDisabled(this.settings.autostart)
 					.onChange((newValue: boolean) => {
-						this.settings.stopWhenElapsed = newValue
+						this.settings.keepRunning = !newValue
 						void this.plugin.saveSettings()
 						this.display()
 					})
 			})
 
-		new Setting(containerEl)
-			.setName('Autostart after timer has elapsed')
-			.addToggle(component => {
-				component
-					.setValue(this.settings.autostart)
-					.setDisabled(this.settings.stopWhenElapsed)
-					.onChange((value: boolean) => {
-						this.settings.autostart = value
-						void this.plugin.saveSettings()
-						this.display()
-					})
-			})
+		new Setting(containerEl).setName('Autostart').addToggle(component => {
+			component
+				.setValue(this.settings.autostart)
+				.setDisabled(this.settings.keepRunning)
+				.onChange((value: boolean) => {
+					this.settings.autostart = value
+					void this.plugin.saveSettings()
+					this.display()
+				})
+		})
 
 		new Setting(containerEl).setName('Notifications').setHeading()
 
@@ -242,7 +239,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName('Modes').setHeading()
 
-		// Define the var outside scopes in order to use it in the saving cb
+		// Define a variable outside the setting scope in order to use it in the saving cb
 		let tempValue = this.settings.modes.map(m => m.name).join(',')
 		new Setting(containerEl)
 			.setName('Mode sequence')
@@ -301,7 +298,7 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 						text.setPlaceholder('Enter time in minutes')
 							.setValue(String(m1.secs / 60))
 							.onChange(async (i: string) => {
-								let minutes = validateNumericInput(i)
+								let minutes = isProperNumber(i)
 								if (minutes) {
 									let secs = minutes * 60
 
@@ -337,12 +334,4 @@ export class BetterPomodoroSettingsTab extends PluginSettingTab {
 				})
 			})
 	}
-}
-
-export function validateNumericInput(i: string): false | number {
-	let num = Number(i)
-	if (isNaN(num)) {
-		return false
-	}
-	return num
 }

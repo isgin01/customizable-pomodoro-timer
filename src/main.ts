@@ -1,5 +1,5 @@
 import {
-	BetterPomodoroSettingsTab,
+	PomodoroSettingsTab,
 	DEFAULT_SETTINGS,
 	type PluginSettings,
 } from './settings'
@@ -7,7 +7,7 @@ import { CustomView, CUSTOM_VIEW_ID } from './custom-view'
 import { Plugin, TFile, WorkspaceLeaf } from 'obsidian'
 import { Timer, recoverableTimerState } from './timer'
 import buildStatusBarItem from './status-bar'
-import { notify } from 'utils'
+import { notify } from './utils'
 import { playSound } from './sound'
 
 const SAVED_SESSION_KEY = 'isgin-timer-saved-session'
@@ -46,7 +46,7 @@ export default class PomodoroPlugin extends Plugin {
 
 		// Widgets
 
-		this.addSettingTab(new BetterPomodoroSettingsTab(this.app, this))
+		this.addSettingTab(new PomodoroSettingsTab(this.app, this))
 
 		this.registerView(CUSTOM_VIEW_ID, leaf => {
 			return new CustomView(leaf, this.timer, this.settings.CvColors)
@@ -71,52 +71,11 @@ export default class PomodoroPlugin extends Plugin {
 
 		// State preservation
 
-		let saveSessionCb = () => {
+		this.timer.on(['tick', 'reset', 'toggle'], () => {
 			this.preserveString(
 				SAVED_SESSION_KEY,
 				JSON.stringify(this.timer.recoverableState),
 			)
-		}
-
-		this.timer.on(['tick', 'reset', 'toggle'], saveSessionCb)
-	}
-
-	private registerCommands(): void {
-		this.addCommand({
-			id: 'toggle',
-			name: 'Toggle',
-			callback: () => {
-				this.timer.toggle()
-			},
-		})
-
-		this.addCommand({
-			id: 'switch',
-			name: 'Switch',
-			callback: () => {
-				this.timer.nextMode()
-			},
-		})
-
-		this.addCommand({
-			id: 'reset',
-			name: 'Reset',
-			callback: () => {
-				this.timer.reset()
-			},
-		})
-	}
-
-	interactWithStatusBar(cb: (statusBarElement: HTMLElement) => void): void {
-		// It is easier to simply use a saved reference to the element in this case
-		cb(this.statusBarItem)
-	}
-
-	interactWithCustomView(cb: (view: CustomView) => void) {
-		this.app.workspace.getLeavesOfType(CUSTOM_VIEW_ID).forEach(leaf => {
-			if (leaf.view instanceof CustomView) {
-				cb(leaf.view)
-			}
 		})
 	}
 
@@ -125,6 +84,40 @@ export default class PomodoroPlugin extends Plugin {
 			...DEFAULT_SETTINGS,
 			...((await this.loadData()) as Partial<PluginSettings>),
 		}
+	}
+
+	private registerCommands(): void {
+		this.addCommand({
+			id: 'toggle',
+			name: 'Toggle',
+			callback: this.timer.toggle,
+		})
+
+		this.addCommand({
+			id: 'switch',
+			name: 'Switch',
+			callback: this.timer.switch,
+		})
+
+		this.addCommand({
+			id: 'reset',
+			name: 'Reset',
+			callback: this.timer.reset,
+		})
+	}
+
+	interactWithStatusBar(cb: (statusBarElement: HTMLElement) => void): void {
+		// It is the easiest to simply use a saved reference to the element
+		cb(this.statusBarItem)
+	}
+
+	interactWithCustomView(cb: (view: CustomView) => void) {
+		// Obsidian documentation forbids to manipulate references of views.
+		this.app.workspace.getLeavesOfType(CUSTOM_VIEW_ID).forEach(leaf => {
+			if (leaf.view instanceof CustomView) {
+				cb(leaf.view)
+			}
+		})
 	}
 
 	async showCustomView() {

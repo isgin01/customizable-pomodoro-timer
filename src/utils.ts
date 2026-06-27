@@ -26,3 +26,11 @@ function obsidianNotify(text: string) {
 export function alterVisibility(el: HTMLElement, show: boolean) {
 	el.setCssProps({ display: show ? 'block' : 'none' })
 }
+
+export function isProperNumber(i: string): false | number {
+	let num = Number(i)
+	if (isNaN(num)) {
+		return false
+	}
+	return num
+}

@@ -1,7 +1,6 @@
 import { ItemView, type WorkspaceLeaf, setIcon, type HexString } from 'obsidian'
 import { type Timer } from './timer'
 
-// TODO: does it have to be unique across all plugins?
 export const CUSTOM_VIEW_ID = 'isgin-pomodoro-timer-view'
 
 export type CvColors = { remaining: HexString; elapsed: HexString }
@@ -101,7 +100,7 @@ export class CustomView extends ItemView {
 		})
 		setIcon(switchBtn, 'switch')
 		switchBtn.addEventListener('click', () => {
-			this.timer.nextMode()
+			this.timer.switch()
 		})
 	}
 
