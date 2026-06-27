@@ -12,7 +12,7 @@ test('init', () => {
 	)
 
 	expect(v.getDisplayText()).toBe('Pomodoro timer view')
-	expect(v.getViewType()).toBe('isgin-pomodoro-timer-view')
+	expect(v.getViewType()).toBe('customizable-pomodoro-timer-view')
 	expect(v.icon).toBe('timer')
 	expect(timer.running).toBe(false)
 })

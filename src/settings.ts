@@ -37,7 +37,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	keepRunning: true,
 	showCustomView: false,
 	showStatusBar: true,
-	CvColors: { remaining: '#ff1700', elapsed: '#06ff00' },
+	CvColors: { remaining: '#f2f2f2', elapsed: '#a30000' },
 	playNotificationSound: true,
 	notificationSoundPath: '',
 }
@@ -58,7 +58,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 
 		containerEl.empty()
 
-		new Setting(containerEl).setName('Visibility').setHeading()
+		new Setting(containerEl).setName('Widgets').setHeading()
 
 		new Setting(containerEl)
 			.setName('Show status bar')
@@ -205,9 +205,9 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 			.setName('Play notification sound')
 			.addToggle(component => {
 				component
-					.setValue(this.settings.systemNotificationPreferred)
+					.setValue(this.settings.playNotificationSound)
 					.onChange(async (newValue: boolean) => {
-						this.settings.systemNotificationPreferred = newValue
+						this.settings.playNotificationSound = newValue
 						await this.plugin.saveSettings()
 					})
 			})
