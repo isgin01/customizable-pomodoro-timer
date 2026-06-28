@@ -1,4 +1,6 @@
-![screenshot](./screenshot.png)
+<p align="center">
+  <img src="./screenshot.png" />
+</p>
 
 A plugin for Obsidian that offers standard Pomodoro timer features and customization options. Set your own timer modes, their sequence, duration, notification sound, colors, and more.
 
