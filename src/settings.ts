@@ -171,7 +171,7 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 					.setValue(this.settings.keepRunning)
 					.setDisabled(this.settings.autostart)
 					.onChange((newValue: boolean) => {
-						this.settings.keepRunning = !newValue
+						this.settings.keepRunning = newValue
 						void this.plugin.saveSettings()
 						this.display()
 					})
@@ -318,12 +318,6 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 									await this.plugin.saveSettings()
 									this.plugin.timer.setModes(
 										this.settings.modes,
-									)
-								} else {
-									notify(
-										this.settings
-											.systemNotificationPreferred,
-										'Malformed input; unsaved',
 									)
 								}
 							})

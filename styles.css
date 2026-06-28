@@ -3,13 +3,13 @@
 	height: 100%;
 	justify-content: center;
 	justify-items: center;
+	margin-top: 1vh;
 }
 
 .animation-container svg {
 	display: block;
-	margin: 10px auto;
-	width: 140px;
-	height: 140px;
+	width: 170px;
+	height: 170px;
 	transform: rotate(-90deg);
 }
 
@@ -29,13 +29,13 @@
 
 .mode-container {
 	margin: auto;
-	translate: 0px -114px;
+	translate: 0px -120px;
 }
 
 .time-container {
 	margin: auto;
-	font-size: 1.35rem;
-	translate: 0px -107px;
+	font-size: 1.3rem;
+	translate: 0px -110px;
 }
 
 .btn-container {

@@ -35,10 +35,9 @@ export class CustomView extends ItemView {
 		svg.createSvg('circle', {
 			attr: {
 				class: 'remaining',
-				cx: 70,
-				cy: 70,
-				r: 70,
-				'stroke-width': 2,
+				cx: 80,
+				cy: 85,
+				r: 76,
 			},
 		})
 		this.setRemainingCircleColor(colors.remaining)
@@ -46,16 +45,16 @@ export class CustomView extends ItemView {
 		this.elapsedTimeCircle = svg.createSvg('circle', {
 			attr: {
 				class: 'elapsed',
-				cx: 70,
-				cy: 70,
-				r: 60,
-				'stroke-width': 20,
+				cx: 80,
+				cy: 85,
+				r: 70,
+				'stroke-width': 12,
 			},
 		})
 		this.setElapsedCircleReach()
 		this.setElapsedCircleColor(colors.elapsed)
 		svg.createSvg('circle', {
-			attr: { class: 'bg', cx: 70, cy: 70, r: 60, 'stroke-width': 8 },
+			attr: { class: 'bg', cx: 80, cy: 85, r: 70 },
 		})
 
 		// TODO: work/break text

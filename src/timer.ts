@@ -45,7 +45,7 @@ export class Timer {
 		if (
 			initialState &&
 			!Object.entries(initialState).some(v => v[1] == null) &&
-			// TODO: a temp solution
+			// TODO: a temporary solution
 			initialState.modeIdx < modes.length
 		) {
 			this.setModes(modes)
@@ -101,6 +101,11 @@ export class Timer {
 
 	private stop(): void {
 		this.running = false
+		window.clearInterval(this.intervalId)
+	}
+
+	unload() {
+		// Prevent the interval from keeping running in the background
 		window.clearInterval(this.intervalId)
 	}
 
