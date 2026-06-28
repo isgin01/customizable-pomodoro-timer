@@ -1,4 +1,4 @@
-import { type App, PluginSettingTab, Setting } from 'obsidian'
+import { type App, PluginSettingTab, Setting, Platform } from 'obsidian'
 import { alterVisibility, isProperNumber, notify } from './utils'
 import { CvColors } from 'custom-view'
 import { Mode } from './timer'
@@ -6,7 +6,6 @@ import type PomodoroPlugin from './main'
 import { playSound } from './sound'
 
 /* eslint "obsidianmd/ui/sentence-case": "warn" -- do not enforce as it isn't relevant here */
-/* eslint "@typescript-eslint/no-deprecated": "warn" -- suppress until the new app version is released */
 
 export type PluginSettings = {
 	modes: Mode[]
@@ -193,16 +192,18 @@ export class PomodoroSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName('Notifications').setHeading()
 
-		new Setting(containerEl)
-			.setName('Prefer system notification')
-			.addToggle(component => {
-				component
-					.setValue(this.settings.systemNotificationPreferred)
-					.onChange(async (newValue: boolean) => {
-						this.settings.systemNotificationPreferred = newValue
-						await this.plugin.saveSettings()
-					})
-			})
+		if (Platform.isDesktopApp) {
+			new Setting(containerEl)
+				.setName('Prefer system notification')
+				.addToggle(component => {
+					component
+						.setValue(this.settings.systemNotificationPreferred)
+						.onChange(async (newValue: boolean) => {
+							this.settings.systemNotificationPreferred = newValue
+							await this.plugin.saveSettings()
+						})
+				})
+		}
 
 		new Setting(containerEl)
 			.setName('Play notification sound')

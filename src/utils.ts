@@ -17,7 +17,7 @@ function systemNotify(text: string) {
 		body: text,
 	}).show()
 }
-/* eslint-enable*/
+/* eslint-enable -- enable the disable rules back*/
 
 function obsidianNotify(text: string) {
 	new Notice(text)
