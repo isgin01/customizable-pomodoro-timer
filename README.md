@@ -2,18 +2,18 @@
   <img src="./screenshot.png" />
 </p>
 
-A plugin for Obsidian that offers standard Pomodoro timer features and customization options. Set your own timer modes, their sequence, duration, notification sound, colors, and more.
+A plugin for Obsidian that offers standard Pomodoro features as well as customization options. Set your own timer modes, their sequence, duration, notification sound, colors, and more.
 
 ### Installation
 
-You can:
+There are two ways to install the plugin:
 
-1. Install it directly from the Obsidian app.
-2. Download `main.js`, `styles.css`, and `manifest.json` inside `YOUR_NOTE_FOLDER/.obsidian/plugins/ultimate-pomodoro-timer`.
+1. Directly from Obsidian.
+2. Download `main.js`, `styles.css`, and `manifest.json` from Releases to `YOUR_NOTE_FOLDER/.obsidian/plugins/ultimate-pomodoro-timer`.
 
 ### Usage
 
-It's fairly simple. After installation, open the plugin settings and adjust them if needed. You can use the plugin as a status bar or panel widget, as well as from the Command Palette.
+After installation, open the plugin settings and adjust them if needed. You can use the plugin as a status bar or panel widget, as well as from the Command Palette.
 
 ### Future feature checklist
 
